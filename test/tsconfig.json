@@ -1,0 +1,42 @@
+{
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "@/*"               : [ "src/*"            ],
+      "@bifrost/test/*"   : [ "test/src/*"       ],
+      "@bifrost"          : [ "src/index.js"     ],
+      "@bifrost/context"  : [ "src/context.js"   ],
+      "@bifrost/helpers"  : [ "src/helpers.js"   ],
+      "@bifrost/keygen"   : [ "src/keygen.js"    ],
+      "@bifrost/list"     : [ "src/list.js"      ],
+      "@bifrost/proto"    : [ "src/proto.js"     ],
+      "@bifrost/shares"   : [ "src/shares.js"    ],
+      "@bifrost/sign"     : [ "src/sign.js"      ],
+      "@bifrost/util"     : [ "src/util.js"      ],
+      "@bifrost/crypto"   : [ "src/ecc/index.js" ]
+    },
+    "module": "NodeNext",
+    "target": "ESNext",
+    "moduleResolution": "NodeNext",
+    "importHelpers": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "useDefineForClassFields": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "pretty": true,
+    "removeComments": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "exclude": [ "node_modules" ],
+  "include": [ "**/*.ts" ]
+}
