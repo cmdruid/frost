@@ -1,13 +1,13 @@
 import { Test }   from 'tape'
 import { Buff }   from '@cmdcode/buff'
-import { assert } from '@/index.js'
+import { assert } from '@bifrost/util'
 
 import {
   create_share_package,
   combine_secret_shares,
   verify_share_membership,
-  derive_group_share
-} from '@/shares.js'
+  derive_dkg_share
+} from '@bifrost/lib'
 
 const aliases = [ 'alice', 'bob', 'carol', 'david', 'edward', 'frank', 'gerome' ]
 const target  = '1353adcaf8f428bc77e61f83261dca4b6697c45ad5a35b0ea591dc13ecb7dca1'
@@ -38,7 +38,7 @@ export default function (tape : Test) {
         // Collect a share from each package at the given index.
         const shares = pkgs.map(pkg => pkg.sec_shares[idx])
         // Derive a group share and return.
-        return derive_group_share(shares)
+        return derive_dkg_share(shares)
       })
 
       // Derive the group secret from the shares.

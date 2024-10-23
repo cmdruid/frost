@@ -1,8 +1,11 @@
-import { Test }               from 'tape'
-import { combine_sig_shares } from '@/proto.js'
-import { verify_sig }         from '@/sign.js'
-import { get_full_context }   from '@/context.js'
-import { SpecVector }         from '../types.js'
+import { Test }       from 'tape'
+import { SpecVector } from '../types.js'
+
+import {
+  combine_sig_shares,
+  get_session_ctx,
+  verify_final_sig
+} from '@bifrost/lib'
 
 export default function (tape : Test, vector : SpecVector) {
   tape.test('Testing signature aggregation and verification', t => {
@@ -13,7 +16,7 @@ export default function (tape : Test, vector : SpecVector) {
       return { idx, pnonce_h, pnonce_b }
     })
 
-    const context = get_full_context(grp_pubkey, pnonces, message)
+    const context = get_session_ctx(grp_pubkey, pnonces, message)
 
     const sig_shares = vector.members.map(({ idx, psig }) => {
       return { idx, sig : psig }
@@ -23,7 +26,7 @@ export default function (tape : Test, vector : SpecVector) {
 
     t.equals(signature, sig, 'aggregate signature should match vector')
 
-    const is_valid = verify_sig(context, message, signature)
+    const is_valid = verify_final_sig(context, message, signature)
 
     t.true(is_valid, 'signature should be a valid schnorr signature')
 

@@ -1,14 +1,14 @@
+import { Buff }       from '@cmdcode/buff'
 import { Test }       from 'tape'
 import { SpecVector } from '../types.js'
-import { Buff }       from '@cmdcode/buff'
-import { get_record } from '@/util.js'
 
 import {
   compute_nonce_binders,
   get_commit_prefix,
+  get_record,
   compute_group_nonce,
   get_bip340_challenge
-} from '@/helpers.js'
+} from '@bifrost/lib'
 
 export default function (tape : Test, vector : SpecVector) {
   tape.test('Testing signature context', t => {

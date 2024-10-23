@@ -38,9 +38,9 @@ export function create_nonce_pkgs (
 /**
  * Combine the signature shares from a FROST signing session.
  */
-export function combine_sig_shares (
-  context    : GroupSessionCtx,
-  sig_shares : PartialSignature[]
+export function combine_partial_sigs (
+  context : GroupSessionCtx,
+  psigs   : PartialSignature[]
 ) {
   //
   const { challenge, pub_nonces, group_state, group_pubkey, message } = context
@@ -53,7 +53,7 @@ export function combine_sig_shares (
   // Compute the group commitment
   const group_pnonce  = compute_group_nonce(pub_nonces, group_binders)
   // Compute aggregated signature
-  const s = sig_shares
+  const s = psigs
     .map(e => Buff.hex(e.psig).big)
     .reduce((acc, nxt) => mod_n(acc + nxt), _0n)
   //

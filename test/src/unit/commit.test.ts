@@ -1,7 +1,7 @@
 import { Test }       from 'tape'
 import { SpecVector } from '../types.js'
 
-import { create_nonce_pkg } from '@/proto.js'
+import { create_nonce_pkg } from '@bifrost/lib'
 
 export default function (tape : Test, vector : SpecVector) {
   tape.test('Testing nonce commitments', t => {

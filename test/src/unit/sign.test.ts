@@ -1,12 +1,11 @@
-import { Test }             from 'tape'
-import { SpecVector }       from '../types.js'
-import { get_pubkey }       from '@/util.js'
-import { get_full_context } from '@/context.js'
-
+import { Test }       from 'tape'
+import { SpecVector } from '../types.js'
 import {
+  get_pubkey,
+  get_session_ctx,
   sign_msg,
-  verify_sig_share
-} from '@/sign.js'
+  verify_partial_sig
+} from '@bifrost/lib'
 
 export default function (tape : Test, vector : SpecVector) {
   tape.test('Testing signature share creation and verification', t => {
@@ -17,7 +16,7 @@ export default function (tape : Test, vector : SpecVector) {
       return { idx, pnonce_h, pnonce_b }
     })
 
-    const context = get_full_context(grp_pubkey, pnonces, message)
+    const context = get_session_ctx(grp_pubkey, pnonces, message)
 
     for (const mbr of vector.members) {
       const { idx, seckey, snonce_h, snonce_b, pnonce_h, pnonce_b } = mbr
@@ -26,10 +25,10 @@ export default function (tape : Test, vector : SpecVector) {
       const pubnonce  = { idx, pnonce_h, pnonce_b }
       const sig_share = sign_msg(context, secshare, secnonce)
       
-      t.equal(sig_share.sig, mbr.psig, `[${idx}] signature share should match vector`)
+      t.equal(sig_share.psig, mbr.psig, `[${idx}] signature share should match vector`)
 
       const pubkey    = get_pubkey(seckey)
-      const is_valid  = verify_sig_share(context, pubnonce, pubkey, sig_share.sig)
+      const is_valid  = verify_partial_sig(context, pubnonce, pubkey, sig_share.psig)
       
       t.true(is_valid, `[${idx}] signature share should pass validation`)
     }

@@ -1,9 +1,8 @@
-import { Buff, Bytes }     from '@cmdcode/buff'
-import { hash340 }         from '@cmdcode/crypto-tools/hash'
-import { H, G }            from '@/ecc/index.js'
-import { _0n, _1n, curve } from '@/ecc/const.js'
-import { mod_n }           from '@/ecc/util.js'
-import { assert }          from '@/util/index.js'
+import { Buff, Bytes } from '@cmdcode/buff'
+import { hash340 }     from '@cmdcode/crypto-tools/hash'
+import { H, G }        from '@/ecc/index.js'
+import { _0n, _1n }    from '@/ecc/const.js'
+import { assert }      from '@/util/index.js'
 
 import {
   serialize_group_commitment,
@@ -13,7 +12,6 @@ import {
 import type {
   BindFactor,
   CurveElement,
-  PointState,
   PublicNonce
 } from '@/types/index.js'
 

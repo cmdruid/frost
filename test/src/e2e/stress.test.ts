@@ -9,7 +9,7 @@ import {
   sign_msg,
   verify_sig,
   verify_sig_share
-} from '@bifrost/sign'
+} from '@bifrost/lib'
 
 export default function (t : Test, rounds = 10, max_shares = 21) {
   t.test('Stress test the full protocol', t => {

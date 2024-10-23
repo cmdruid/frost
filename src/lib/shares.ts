@@ -33,34 +33,36 @@ export function create_share_package (
   return { group_pubkey, sec_shares, vss_commits }
 }
 
-export function derive_group_share (
+export function derive_dkg_share (
   shares : SecretShare[]
 ) : SecretShare {
   // Check that each share has the same idx.
   assert.is_equal_set(shares.map(e => e.idx))
-  // Sum all shares.
-  const gshare = shares
+  // Get the index value of the first share.
+  const idx    = shares[0].idx
+  // Sum all secret shares into a DKG secret.
+  const secret = shares
     .map(e => Buff.bytes(e.seckey).big)
     .reduce((acc, cur) => acc += cur, _0n)
   // Format group share into a secret key.
-  const seckey = Buff.big(mod_n(gshare), 32).hex
-  // Return secret group share package.
-  return { idx : shares[0].idx, seckey }
+  const seckey = Buff.big(mod_n(secret), 32).hex
+  // Return secret as a share package.
+  return { idx, seckey }
 }
 
 /**
  * Creates a list of secret shares for a given polynomial.
  */
 export function create_secret_shares (
-  coeffs    : bigint[],
-  share_max : number
+  group_coeffs : bigint[],
+  share_count  : number
 ) : SecretShare[] {
   // Init our share list.
   const shares  = []
   // For each share to generate (skipping the root):
-  for (let i = 1; i < share_max + 1; i++) {
+  for (let i = 1; i < share_count + 1; i++) {
     // Evaluate the polynomial at the index (i).
-    const scalar = evaluate_x(coeffs, BigInt(i))
+    const scalar = evaluate_x(group_coeffs, BigInt(i))
     // Mod and convert the scalar into a hex value.
     const seckey = Buff.big(scalar, 32).hex
     // Add the index and share.

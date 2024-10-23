@@ -1,17 +1,16 @@
-import { Buff }                     from '@cmdcode/buff'
-import { get_full_context }         from '@bifrost/context'
-import { get_record, random_bytes } from '@bifrost/util'
-import { sign_msg, verify_sig }     from '@bifrost/sign'
+import { Buff } from '@cmdcode/buff'
 
 import {
   combine_sig_shares,
-  create_nonce_pkg
-} from '@/proto.js'
-
-import {
+  create_nonce_pkg,
   create_share_package,
+  get_record,
+  get_session_ctx,
+  random_bytes,
+  sign_msg,
+  verify_final_sig,
   verify_share_membership
-} from '@/shares.js'
+} from '@bifrost/lib'
 
 const secrets  = [ random_bytes(32), random_bytes(32) ]
 const message  = new TextEncoder().encode('hello world!')
@@ -22,17 +21,18 @@ const nseed_b = secrets[1].hex
 
 // Generate a secret, package of shares, and group key.
 const { vss_commits, group_pubkey, sec_shares } = create_share_package(secrets, thold, share_ct)
-//
+// 
 const is_valid_shares = sec_shares.every(e => verify_share_membership(vss_commits, e, thold))
-//
+// 
 if (!is_valid_shares) throw new Error('shares failed validation')
 // Use a t amount of shares to create nonce commitments.
-const members     = sec_shares.slice(0, thold).map(e => create_nonce_pkg(e.seckey, nseed_h, nseed_b))
+const members     = sec_shares.slice(0, thold)
+const commits     = members.map(e => create_nonce_pkg(e.seckey, nseed_h, nseed_b))
 // Collect the commitments into an array.
 const sec_nonces  = members.map(({ binder_sn, hidden_sn }) => mbr.sec_nonces)
 const pub_nonces  = members.map(mbr => mbr.pub_nonces)
 // Compute some context data for the signing session.
-const context     = get_full_context(group_pubkey, pub_nonces, message)
+const context     = get_session_ctx(group_pubkey, pub_nonces, message)
 // Create the partial signatures for a given signing context.
 const psigs = context.identifiers.map(idx => {
   const sec_share = get_record(sec_shares, Number(idx))
@@ -41,7 +41,7 @@ const psigs = context.identifiers.map(idx => {
 })
 // Aggregate the partial signatures into a single signature.
 const signature = combine_sig_shares(context, psigs)
-const is_valid  = verify_sig(context, message, signature)
+const is_valid  = verify_final_sig(context, message, signature)
 
 console.log(JSON.stringify({
   "group": {
