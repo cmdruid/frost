@@ -1,7 +1,7 @@
 import { Test }       from 'tape'
-import { SpecVector } from './types.js'
+import { SpecVector } from '../types.js'
 
-import { create_commitment } from '@/proto.js'
+import { create_nonce_pkg } from '@/proto.js'
 
 export default function (tape : Test, vector : SpecVector) {
   tape.test('Testing nonce commitments', t => {
@@ -9,7 +9,7 @@ export default function (tape : Test, vector : SpecVector) {
     for (const mbr of vector.members) {
       const { idx, seckey, nseed_h, nseed_b } = mbr
 
-      const pkg = create_commitment({ idx, seckey }, nseed_h, nseed_b)
+      const pkg = create_nonce_pkg({ idx, seckey }, nseed_h, nseed_b)
 
       const { sec_nonces, pub_nonces } = pkg
       

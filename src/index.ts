@@ -1,11 +1,10 @@
-export * as ecc    from './ecc/index.js'
-export * as assert from './assert.js'
+import * as ECC  from './ecc/index.js'
+import * as Lib  from './lib/index.js'
+import * as Util from './util/index.js'
 
-export * from './context.js'
-export * from './helpers.js'
-export * from './util.js'
-export * from './proto.js'
-export * from './shares.js'
-export * from './sign.js'
-export * from './types.js'
-export * from './util.js'
+import CONST  from './const.js'
+import Schema from './schema/index.js'
+
+export { CONST, ECC, Lib, Schema, Util }
+
+export default { CONST, ECC, Lib, Schema, Util }

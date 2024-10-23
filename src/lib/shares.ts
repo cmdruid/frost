@@ -1,10 +1,9 @@
-import { Buff, Bytes }  from '@cmdcode/buff'
-import { G }            from './ecc/index.js'
-import { mod_n, pow_n } from './ecc/util.js'
-import { _0n, _1n }     from './ecc/const.js'
-import { lift_x }       from './util.js'
+import { Buff, Bytes } from '@cmdcode/buff'
+import { G }           from '@/ecc/index.js'
+import { _0n, _1n }    from '@/ecc/const.js'
+import { assert }      from '@/util/index.js'
 
-import { SecretShare, SharePackage } from './types.js'
+import { mod_n, pow_n, lift_x } from '@/ecc/util.js'
 
 import {
   create_coeffs,
@@ -12,19 +11,22 @@ import {
   evaluate_x
 } from './poly.js'
 
-import * as assert from './assert.js'
+import type {
+  SecretShare,
+  TrustedDealerPackage
+} from '@/types/index.js'
 
 export function create_share_package (
   secrets     : Bytes[],
   threshold   : number,
   share_max   : number,
-) : SharePackage {
+) : TrustedDealerPackage {
   // Create the coefficients for the polynomial.
   const coeffs       = create_coeffs(secrets, threshold)
   // Create the secret shares for each member.
   const sec_shares   = create_secret_shares(coeffs, share_max)
   // Create the commitments for each share.
-  const vss_commits  = get_share_commits(coeffs)
+  const vss_commits  = get_coeff_commits(coeffs)
   // Get the group pubkey for the shares.
   const group_pubkey = vss_commits[0]
   // Return the share package object.
@@ -84,9 +86,9 @@ export function combine_secret_shares (shares : SecretShare[]) {
 }
 
 /**
- * Create a list of verifiable commitments for each coefficient.
+ * Create a list of public key commitments, one for each coefficient.
  */
-export function get_share_commits (coeffs : Bytes[]) : string[] {
+export function get_coeff_commits (coeffs : Bytes[]) : string[] {
   // For each coefficient in the list:
   return coeffs.map(e => {
     // Convert to a scalar value.
@@ -97,9 +99,9 @@ export function get_share_commits (coeffs : Bytes[]) : string[] {
 }
 
 /**
- * Verify a secret share using a list of coeff commitments.
+ * Verify a secret share using a list of vss commitments.
  */
-export function verify_share_commit (
+export function verify_share_membership (
   commits : Bytes[],
   share   : SecretShare,
   thold   : number

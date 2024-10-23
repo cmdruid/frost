@@ -1,5 +1,5 @@
 import { Test }       from 'tape'
-import { SpecVector } from './types.js'
+import { SpecVector } from '../types.js'
 import { Buff }       from '@cmdcode/buff'
 import { get_record } from '@/util.js'
 
@@ -7,7 +7,7 @@ import {
   compute_nonce_binders,
   get_commit_prefix,
   compute_group_nonce,
-  compute_bip340_challenge
+  get_bip340_challenge
 } from '@/helpers.js'
 
 export default function (tape : Test, vector : SpecVector) {
@@ -33,7 +33,7 @@ export default function (tape : Test, vector : SpecVector) {
     
     t.equal(group_nonce, grp_pnonce, 'group pubnonce should match vector')
 
-    const group_chall = compute_bip340_challenge(group_nonce, grp_pubkey, message)
+    const group_chall = get_bip340_challenge(group_nonce, grp_pubkey, message)
 
     t.equal(Buff.big(group_chall, 32).hex, challenge, 'group challenge should match vector')
 

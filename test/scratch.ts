@@ -4,7 +4,7 @@ import { assert } from '@/index.js'
 import {
   create_share_package,
   combine_secret_shares,
-  verify_share_commit,
+  verify_share_membership,
   derive_group_share
 } from '@/shares.js'
 
@@ -17,7 +17,7 @@ const pkgs = aliases.map(alias => {
   const shares = create_share_package([ secret ], 5, 7)
   // Verify each share is included in the polynomial.
   shares.sec_shares.forEach(s => {
-    const is_valid = verify_share_commit(shares.vss_commits, s, 5)
+    const is_valid = verify_share_membership(shares.vss_commits, s, 5)
     assert.ok(is_valid, 'share failed validation')
   })
   // shares.sec_shares = shares.sec_shares

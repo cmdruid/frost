@@ -25,15 +25,20 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./crypto": {
-      "import": "./dist/crypto/index.js",
-      "types": "./dist/crypto/index.d.ts",
-      "default": "./dist/crypto/index.js"
+    "./ecc": {
+      "import": "./dist/ecc/index.js",
+      "types": "./dist/ecc/index.d.ts",
+      "default": "./dist/ecc/index.js"
     },
-    "./serial": {
-      "import": "./dist/serial/index.js",
-      "types": "./dist/serial/index.d.ts",
-      "default": "./dist/serial/index.js"
+    "./lib": {
+      "import": "./dist/lib/index.js",
+      "types": "./dist/lib/index.d.ts",
+      "default": "./dist/lib/index.js"
+    },
+    "./util": {
+      "import": "./dist/util/index.js",
+      "types": "./dist/util/index.d.ts",
+      "default": "./dist/util/index.js"
     }
   },
   "scripts": {

@@ -1,41 +1,46 @@
-import { Buff, Bytes }    from '@cmdcode/buff'
-import { get_pubkey }     from './util.js'
-import { _0n }            from './ecc/const.js'
-import { mod_n }          from './ecc/util.js'
-
-import { CommitContext, NonceData, SecretShare, SignatureShare } from './types.js'
+import { Buff, Bytes } from '@cmdcode/buff'
+import { _0n }         from '@/ecc/const.js'
+import { mod_n }       from '@/ecc/util.js'
+import { get_pubkey }  from './util.js'
 
 import {
   compute_group_nonce,
   compute_nonce_binders,
   get_commit_prefix,
-  nonce_generate
+  generate_nonce
 } from './helpers.js'
+
+import type {
+  GroupSessionCtx,
+  NoncePackage,
+  PartialSignature,
+  SecretShare,
+} from '@/types/index.js'
 
 /**
  * Creates a commitment package for a FROST signing session.
  */
-export function create_commitment (
-  secshare     : SecretShare,
+export function create_nonce_pkgs (
+  secret_share : SecretShare,
   hidden_seed ?: Bytes,
   binder_seed ?: Bytes
-) : NonceData {
-  const { idx, seckey } = secshare
-  const snonce_h = nonce_generate(seckey, hidden_seed).hex
-  const snonce_b = nonce_generate(seckey, binder_seed).hex
-  const pnonce_h = get_pubkey(snonce_h)
-  const pnonce_b = get_pubkey(snonce_b)
-  const sec_nonces = { idx, snonce_h, snonce_b }
-  const pub_nonces = { idx, pnonce_h, pnonce_b }
-  return { sec_nonces, pub_nonces }
+) : NoncePackage {
+  const { idx, seckey } = secret_share
+  const binder_sn = generate_nonce(seckey, binder_seed).hex
+  const hidden_sn = generate_nonce(seckey, hidden_seed).hex
+  const binder_pn = get_pubkey(binder_sn)
+  const hidden_pn = get_pubkey(hidden_sn)
+  const secnonce  = { idx, binder_sn, hidden_sn }
+  const pubnonce  = { idx, binder_pn, hidden_pn }
+  return { idx, pubnonce, secnonce }
 }
 
 /**
  * Combine the signature shares from a FROST signing session.
  */
 export function combine_sig_shares (
-  context    : CommitContext,
-  sig_shares : SignatureShare[]
+  context    : GroupSessionCtx,
+  sig_shares : PartialSignature[]
 ) {
   //
   const { challenge, pub_nonces, group_state, group_pubkey, message } = context
@@ -49,7 +54,7 @@ export function combine_sig_shares (
   const group_pnonce  = compute_group_nonce(pub_nonces, group_binders)
   // Compute aggregated signature
   const s = sig_shares
-    .map(e => Buff.hex(e.sig).big)
+    .map(e => Buff.hex(e.psig).big)
     .reduce((acc, nxt) => mod_n(acc + nxt), _0n)
   //
   const a = challenge * parity * tweak

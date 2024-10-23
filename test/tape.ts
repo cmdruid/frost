@@ -1,12 +1,12 @@
 import tape         from 'tape'
-import shares_test  from './src/shares.js'
-import commit_test  from './src/commit.js'
-import context_test from './src/context.js'
-import dkg_test     from './src/dkg.js'
-import signer_test  from './src/sign.js'
-import combine_test from './src/aggregate.js'
-import stress_test  from './src/stress.js'
-import tx_test      from './src/tx.js'
+import shares_test  from './src/unit/shares.test.js'
+import commit_test  from './src/unit/commit.test.js'
+import context_test from './src/unit/context.test.js'
+import dkg_test     from './src/unit/dkg.test.js'
+import signer_test  from './src/unit/sign.test.js'
+import combine_test from './src/unit/aggregate.test.js'
+import stress_test  from './src/e2e/stress.test.js'
+import tx_test      from './src/e2e/tx.test.js'
 
 import vector from './src/vectors/spec.json' assert { type : 'json' }
 
@@ -22,5 +22,4 @@ tape('Bifrost Test Suite', async t => {
   await tx_test(t)
 
   stress_test(t, 10, 100)
-
 })

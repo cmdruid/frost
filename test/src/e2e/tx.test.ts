@@ -1,7 +1,7 @@
 import { CoreDaemon } from '@cmdcode/core-cmd'
 import { Test }       from 'tape'
 
-import { frost_keygen, frost_sign } from './signer.js'
+import { frost_keygen, frost_sign } from '../lib/signer.js'
 
 import { Address, Script, Signer, Tap, Tx } from '@cmdcode/tapscript'
 

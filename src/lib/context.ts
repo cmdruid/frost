@@ -1,22 +1,22 @@
-import { Buff, Bytes } from '@cmdcode/buff'
-import { lift_x }      from './util.js'
-import { _1n }         from './ecc/const.js'
-
-import { get_nonce_identifiers } from './util.js' 
-
-import {
-  CommitContext,
-  KeyContext,
-  PublicNonce
-} from './types.js'
+import { Buff, Bytes }     from '@cmdcode/buff'
+import { _1n }             from '@/ecc/const.js'
+import { get_point_state } from '@/ecc/state.js'
+import { lift_x }          from '@/ecc/util.js'
+import { get_nonce_ids }   from './util.js' 
 
 import {
   compute_nonce_binders,
-  compute_bip340_challenge,
+  get_bip340_challenge,
   get_commit_prefix,
-  compute_group_nonce,
-  get_point_state,
+  compute_group_nonce
 } from './helpers.js'
+
+import type {
+  GroupCommitContext,
+  GroupKeyContext,
+  GroupSessionCtx,
+  PublicNonce
+} from '@/types/index.js'
 
 /**
  * Get the initial context of the group key, plus any tweaks.
@@ -24,7 +24,7 @@ import {
 export function get_key_context (
   group_pk : Bytes,
   tweaks  ?: Bytes[]
-) : KeyContext {
+) : GroupKeyContext {
   // Initialize internal pubkey as group pubkey.
   const int_pubkey   = Buff.bytes(group_pk).hex
   // Get initial state of pubkey as internal state.
@@ -41,10 +41,10 @@ export function get_key_context (
  * Get the remaining context of the signing session.
  */
 export function get_commit_context (
-  context    : KeyContext,
+  context    : GroupKeyContext,
   pub_nonces : PublicNonce[],
   message    : Bytes,
-) : CommitContext {
+) : GroupCommitContext {
   // Set the group pubkey from the key context.
   const group_pubkey = context.group_pubkey
   // Calculate the prefix for making the binding commitments.
@@ -54,14 +54,14 @@ export function get_commit_context (
   // Compute the group nonce value.
   const group_pnonce = compute_group_nonce(pub_nonces, bind_factors)
   // Compile a list of identifiers from the nonces.
-  const identifiers  = get_nonce_identifiers(pub_nonces)
+  const identifiers  = get_nonce_ids(pub_nonces)
   // Compute the challenge hash for the signing session.
-  const challenge    = compute_bip340_challenge(group_pnonce, group_pubkey, message)
+  const challenge    = get_bip340_challenge(group_pnonce, group_pubkey, message)
   // Format the message to be signed as a hex string.
   message = Buff.bytes(message).hex
   // Return the context object.
   return {
-    ...context, bind_prefix, bind_factors, challenge,
+    bind_prefix, bind_factors, challenge,
     pub_nonces, group_pnonce, identifiers, message
   }
 }
@@ -69,16 +69,17 @@ export function get_commit_context (
 /**
  * Get the full context of the signing session.
  */
-export function get_full_context (
+export function get_session_ctx (
   group_pk   : Bytes,
   pub_nonces : PublicNonce[],
   message    : Bytes,
   tweaks    ?: Bytes[]
-) : CommitContext {
+) : GroupSessionCtx {
   // Get the key context for the session.
   const key_ctx = get_key_context(group_pk, tweaks)
   // Get the remaining context for the session.
   const com_ctx = get_commit_context(key_ctx, pub_nonces, message)
   // Return the full context object.
-  return com_ctx
+  return { ...key_ctx, ...com_ctx }
 }
+

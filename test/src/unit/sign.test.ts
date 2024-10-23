@@ -1,5 +1,5 @@
 import { Test }             from 'tape'
-import { SpecVector }       from './types.js'
+import { SpecVector }       from '../types.js'
 import { get_pubkey }       from '@/util.js'
 import { get_full_context } from '@/context.js'
 

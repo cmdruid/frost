@@ -1,18 +1,19 @@
-import { get_pubkey, get_record, random_bytes }  from '@bifrost/util'
-import { combine_sig_shares, create_commitment } from '@/proto.js'
-import { SharePackage }                          from '@/types.js'
-import { get_full_context }                      from '@/context.js'
+import { get_pubkey, get_record, random_bytes } from '@/lib/util.js'
+import { combine_sig_shares, create_nonce_pkg } from '@/lib/proto.js'
+import { get_full_context }                     from '@/lib/context.js'
 
 import {
   create_share_package,
-  verify_share_commit
-} from '@/shares.js'
+  verify_share_membership
+} from '@/lib/shares.js'
 
 import {
   sign_msg,
   verify_sig,
   verify_sig_share
 } from '@bifrost/sign'
+
+import type { DealerPackage } from '@/types.js'
 
 export function frost_keygen (
   threshold  : number = 11,
@@ -24,7 +25,7 @@ export function frost_keygen (
   const pkg = create_share_package(secrets, threshold, max_shares)
   //
   pkg.sec_shares.forEach(e => {
-    if (!verify_share_commit(pkg.vss_commits, e, threshold)) {
+    if (!verify_share_membership(pkg.vss_commits, e, threshold)) {
       throw new Error(`share ${e.idx} failed validation:, ${e.seckey}`)
     }
   })
@@ -33,7 +34,7 @@ export function frost_keygen (
 }
 
 export function frost_sign (
-  pkg        : SharePackage,
+  pkg        : DealerPackage,
   message    : string,
   tweaks     : string[] = [],
   threshold  : number   = 11,
@@ -42,7 +43,7 @@ export function frost_sign (
   const { group_pubkey, sec_shares } = pkg
   // Use a t amount of shares to create nonce commitments.
   const members = sec_shares.slice(0, threshold).map(e => {
-    return create_commitment(e)
+    return create_nonce_pkg(e)
   })
   // Collect the commitments into an array.
   const sec_nonces  = members.map(mbr => mbr.sec_nonces)

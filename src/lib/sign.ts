@@ -1,28 +1,28 @@
 import { Buff, Bytes }     from '@cmdcode/buff'
 import { schnorr }         from '@noble/curves/secp256k1'
+import { G }               from '@/ecc/index.js'
+import { lift_x, mod_n }   from '@/ecc/util.js'
+import { _1n, curve }      from '@/ecc/const.js'
 import { interpolate_x }   from './poly.js'
-import { lift_x }          from './util.js'
-import { G }               from './ecc/index.js'
-import { mod_n }           from './ecc/util.js'
-import { _1n, curve }      from './ecc/const.js'
 import { get_bind_factor } from './util.js' 
 
-import {
-  CommitContext,
+import type {
   PublicNonce,
   SecretNonce,
   SecretShare,
-  SignatureShare
-} from './types.js'
+  PartialSignature,
+  GroupKeyContext,
+  GroupSessionCtx
+} from '@/types/index.js'
 
 /**
  * Sign a message using a secret share and secret nonce value.
  */
 export function sign_msg (
-  context  : CommitContext,
+  context  : GroupSessionCtx,
   secshare : SecretShare,
   secnonce : SecretNonce
-) : SignatureShare {
+) : PartialSignature {
   const { bind_factors, challenge, identifiers, group_state : Q } = context
   
   const bind_factor = get_bind_factor(bind_factors, secshare.idx)
@@ -33,8 +33,8 @@ export function sign_msg (
   }
 
   // Compute the signature share
-  let snonce_h  = Buff.bytes(secnonce.snonce_h).big
-  let snonce_b  = Buff.bytes(secnonce.snonce_b).big
+  let snonce_h  = Buff.bytes(secnonce.hidden_sn).big
+  let snonce_b  = Buff.bytes(secnonce.binder_sn).big
   let seckey    = Buff.bytes(secshare.seckey).big
 
   const GR_elem = lift_x(context.group_pnonce)
@@ -49,14 +49,14 @@ export function sign_msg (
   const sk  = mod_n(Q.parity * Q.state * seckey)
   const sig = mod_n(cnonce + coefficient * sk * challenge)
 
-  return { idx : secshare.idx, sig : Buff.big(sig, 32).hex }
+  return { idx : secshare.idx, psig : Buff.big(sig, 32).hex }
 }
 
 /**
  * Verify a signature share is valid.
  */
-export function verify_sig_share (
-  context   : CommitContext,
+export function verify_partial_sig (
+  context   : GroupSessionCtx,
   pub_nonce : PublicNonce,
   share_pk  : Bytes,
   share_sig : Bytes,
@@ -68,8 +68,8 @@ export function verify_sig_share (
   const R_elem = lift_x(group_pnonce)
   const binder = get_bind_factor(bind_factors, pub_nonce.idx)
 
-  let hidden_elem = lift_x(pub_nonce.pnonce_h)
-  let binder_elem = lift_x(pub_nonce.pnonce_b)
+  let hidden_elem = lift_x(pub_nonce.hidden_pn)
+  let binder_elem = lift_x(pub_nonce.binder_pn)
   let public_elem = lift_x(share_pk)
 
   if (!P_elem.hasEvenY()) {
@@ -96,8 +96,8 @@ export function verify_sig_share (
 /**
  * Verify that a completed signature is valid.
  */
-export function verify_sig (
-  context   : CommitContext,
+export function verify_final_sig (
+  context   : GroupKeyContext,
   message   : Bytes,
   signature : Bytes
 ) {

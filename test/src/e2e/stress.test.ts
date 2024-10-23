@@ -2,8 +2,8 @@ import { Test }             from 'tape'
 import { get_full_context } from '@/context.js'
 
 import { get_pubkey, get_record, random_bytes }      from '@bifrost/util'
-import { combine_sig_shares, create_commitment }     from '@/proto.js'
-import { create_share_package, verify_share_commit } from '@/shares.js'
+import { combine_sig_shares, create_nonce_pkg }     from '@/proto.js'
+import { create_share_package, verify_share_membership } from '@/shares.js'
 
 import {
   sign_msg,
@@ -39,7 +39,7 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
         // })
 
         // Use a t amount of shares to create nonce commitments.
-        const members = sec_shares.slice(0, thold).map(e => create_commitment(e, nseed_h, nseed_b))
+        const members = sec_shares.slice(0, thold).map(e => create_nonce_pkg(e, nseed_h, nseed_b))
 
         // Collect the commitments into an array.
         const sec_nonces  = members.map(mbr => mbr.sec_nonces)

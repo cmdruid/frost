@@ -2,7 +2,7 @@ import { Test }               from 'tape'
 import { combine_sig_shares } from '@/proto.js'
 import { verify_sig }         from '@/sign.js'
 import { get_full_context }   from '@/context.js'
-import { SpecVector }         from './types.js'
+import { SpecVector }         from '../types.js'
 
 export default function (tape : Test, vector : SpecVector) {
   tape.test('Testing signature aggregation and verification', t => {

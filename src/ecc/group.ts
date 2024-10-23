@@ -3,11 +3,12 @@
 
 import { Buff, Bytes }  from '@cmdcode/buff'
 import { secp256k1 }    from '@noble/curves/secp256k1'
+import { assert }       from '@/util/index.js'
 import { mod_n }        from './util.js'
-import { CurveElement } from './types.js'
 
-import CONST       from './const.js'
-import * as assert from '../assert.js'
+import type { CurveElement } from '@/types/index.js'
+
+import CONST from './const.js'
 
 const { curve, Point, _0n, _1n } = CONST
 

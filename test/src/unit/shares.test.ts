@@ -1,11 +1,11 @@
 import { Test }                  from 'tape'
-import { SpecVector }            from './types.js'
+import { SpecVector }            from '../types.js'
 import { get_record }            from '@/util.js'
 
 import {
   create_share_package,
   combine_secret_shares,
-  verify_share_commit
+  verify_share_membership
 } from '@/shares.js'
 
 export default function (tape : Test, vector : SpecVector) {
@@ -21,7 +21,7 @@ export default function (tape : Test, vector : SpecVector) {
 
     for (const mbr of vector.members) {
       const share    = get_record(pkg.sec_shares, mbr.idx)
-      const is_valid = verify_share_commit(pkg.vss_commits, share, share_min)
+      const is_valid = verify_share_membership(pkg.vss_commits, share, share_min)
       t.equal(share.seckey, mbr.seckey, `[${mbr.idx}] share key matches vector`)
       t.true(is_valid, `[${mbr.idx}] share commit is valid using vss`)
     }

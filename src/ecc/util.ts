@@ -1,6 +1,7 @@
 import { mod, pow } from '@noble/curves/abstract/modular'
 
-import CONST from './const.js'
+import CONST, { Point } from './const.js'
+import { Buff, Bytes } from '@cmdcode/buff'
 
 const { curve } = CONST
 
@@ -24,4 +25,14 @@ export function str_to_bytes (str : string) {
 
 export function bytes_to_str (bytes : Uint8Array) {
   return new TextDecoder().decode(bytes)
+}
+
+export function lift_x (pubkey : Bytes) {
+  let bytes = Buff.bytes(pubkey)
+  if (bytes.length < 32 || bytes.length > 33) {
+    throw new Error('invalid pubkeky: ' + bytes.hex + ' ' + bytes.length)
+  } else if (bytes.length === 32) {
+    bytes = bytes.prepend(2)
+  }
+  return Point.fromHex(bytes.hex)
 }
