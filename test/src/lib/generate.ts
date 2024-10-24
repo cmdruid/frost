@@ -1,12 +1,12 @@
 import { Buff } from '@cmdcode/buff'
 
+import { get_record, random_bytes } from '@bifrost/util'
+
 import {
-  combine_sig_shares,
+  combine_partial_sigs,
   create_nonce_pkg,
-  create_share_package,
-  get_record,
+  create_share_pkg,
   get_session_ctx,
-  random_bytes,
   sign_msg,
   verify_final_sig,
   verify_share_membership
@@ -20,17 +20,17 @@ const nseed_h = secrets[0].hex
 const nseed_b = secrets[1].hex
 
 // Generate a secret, package of shares, and group key.
-const { vss_commits, group_pubkey, sec_shares } = create_share_package(secrets, thold, share_ct)
+const { vss_commits, group_pubkey, sec_shares } = create_share_pkg(secrets, thold, share_ct)
 // 
 const is_valid_shares = sec_shares.every(e => verify_share_membership(vss_commits, e, thold))
 // 
 if (!is_valid_shares) throw new Error('shares failed validation')
 // Use a t amount of shares to create nonce commitments.
 const members     = sec_shares.slice(0, thold)
-const commits     = members.map(e => create_nonce_pkg(e.seckey, nseed_h, nseed_b))
+const commits     = members.map(e => create_nonce_pkg(e, nseed_h, nseed_b))
 // Collect the commitments into an array.
-const sec_nonces  = members.map(({ binder_sn, hidden_sn }) => mbr.sec_nonces)
-const pub_nonces  = members.map(mbr => mbr.pub_nonces)
+const sec_nonces  = commits.map(mbr => mbr.secnonce)
+const pub_nonces  = commits.map(mbr => mbr.pubnonce)
 // Compute some context data for the signing session.
 const context     = get_session_ctx(group_pubkey, pub_nonces, message)
 // Create the partial signatures for a given signing context.
@@ -40,7 +40,7 @@ const psigs = context.identifiers.map(idx => {
   return sign_msg(context, sec_share, sec_nonce)
 })
 // Aggregate the partial signatures into a single signature.
-const signature = combine_sig_shares(context, psigs)
+const signature = combine_partial_sigs(context, psigs)
 const is_valid  = verify_final_sig(context, message, signature)
 
 console.log(JSON.stringify({
@@ -58,13 +58,13 @@ console.log(JSON.stringify({
     "sig"          : signature
   },
   "members" : context.identifiers.map(i => {
-    const idx                    = Number(i)
-    const { seckey }             = get_record(sec_shares, idx)
-    const { snonce_h, snonce_b } = get_record(sec_nonces, idx)
-    const { pnonce_h, pnonce_b } = get_record(pub_nonces, idx)
-    const psig    = get_record(psigs, idx).sig
-    const binder  = get_record(context.bind_factors, idx).key
-    return { idx, seckey, nseed_h, nseed_b, snonce_h, snonce_b, pnonce_h, pnonce_b, binder, psig }
+    const idx = Number(i)
+    const { seckey }               = get_record(sec_shares, idx)
+    const { binder_sn, hidden_sn } = get_record(sec_nonces, idx)
+    const { binder_pn, hidden_pn } = get_record(pub_nonces, idx)
+    const psig   = get_record(psigs, idx).psig
+    const binder = get_record(context.bind_factors, idx).key
+    return { idx, seckey, nseed_h, nseed_b, binder_sn, binder_pn, hidden_sn, hidden_pn, binder, psig }
   })
 }, null, 2))
 

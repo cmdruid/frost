@@ -1,8 +1,11 @@
-import { Buff, Bytes }     from '@cmdcode/buff'
-import { _1n }             from '@/ecc/const.js'
-import { get_point_state } from '@/ecc/state.js'
-import { lift_x }          from '@/ecc/util.js'
-import { get_nonce_ids }   from './util.js' 
+import { Buff, Bytes }      from '@cmdcode/buff'
+import { _1n }              from '@/ecc/const.js'
+import { get_point_state }  from '@/ecc/state.js'
+import { lift_x }           from '@/ecc/util.js'
+import { create_share_pkg } from './shares.js'
+import { create_nonce_pkg } from './proto.js'
+
+import { get_nonce_ids, get_pubkey } from './util.js' 
 
 import {
   compute_nonce_binders,
@@ -83,3 +86,25 @@ export function get_session_ctx (
   return { ...key_ctx, ...com_ctx }
 }
 
+export function get_dealer_ctx (
+  secrets   : string[],
+  share_ct  : number,
+  threshold : number
+) {
+  const share_pkg = create_share_pkg(secrets, threshold, share_ct)
+  const group_pk  = share_pkg.group_pubkey
+  const shares    = [] 
+  const commits   = []
+
+  for (const share of share_pkg.sec_shares) {
+    const { idx, seckey } = share
+    const pubkey    = get_pubkey(seckey) 
+    const nonce_pkg = create_nonce_pkg(share)
+    const { binder_sn, hidden_sn } = nonce_pkg.secnonce
+    const { binder_pn, hidden_pn } = nonce_pkg.pubnonce
+    shares.push({ idx, binder_sn, hidden_sn, seckey, })
+    commits.push({ idx, binder_pn, hidden_pn, pubkey })
+  }
+
+  return { commits, group_pk, shares, threshold }
+}

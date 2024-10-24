@@ -1,14 +1,16 @@
-import { Test }             from 'tape'
-import { get_full_context } from '@/context.js'
+import { Test } from 'tape'
 
-import { get_pubkey, get_record, random_bytes }      from '@bifrost/util'
-import { combine_sig_shares, create_nonce_pkg }     from '@/proto.js'
-import { create_share_package, verify_share_membership } from '@/shares.js'
+import { get_record, random_bytes } from '@bifrost/util'
 
 import {
+  combine_partial_sigs,
+  create_nonce_pkg,
+  create_share_pkg,
+  get_pubkey,
+  get_session_ctx,
   sign_msg,
-  verify_sig,
-  verify_sig_share
+  verify_final_sig,
+  verify_partial_sig
 } from '@bifrost/lib'
 
 export default function (t : Test, rounds = 10, max_shares = 21) {
@@ -27,7 +29,7 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
 
       try {
         // Generate a secret, package of shares, and group key.
-        const { vss_commits, group_pubkey, sec_shares } = create_share_package(secrets, thold, share_ct)
+        const { vss_commits, group_pubkey, sec_shares } = create_share_pkg(secrets, thold, share_ct)
 
         // This part is really slow.
 
@@ -42,11 +44,11 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
         const members = sec_shares.slice(0, thold).map(e => create_nonce_pkg(e, nseed_h, nseed_b))
 
         // Collect the commitments into an array.
-        const sec_nonces  = members.map(mbr => mbr.sec_nonces)
-        const pub_nonces  = members.map(mbr => mbr.pub_nonces)
+        const sec_nonces  = members.map(mbr => mbr.secnonce)
+        const pub_nonces  = members.map(mbr => mbr.pubnonce)
 
         // Compute some context data for the signing session.
-        const context = get_full_context(group_pubkey, pub_nonces, message)
+        const context = get_session_ctx(group_pubkey, pub_nonces, message)
         
         // Create the partial signatures for a given signing context.
         const psigs = context.identifiers.map(i => {
@@ -56,15 +58,15 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
           const pub_nonce = get_record(pub_nonces, idx)
           const sig_share = sign_msg(context, sec_share, sec_nonce)
           const share_pk  = get_pubkey(sec_share.seckey)
-          if (!verify_sig_share(context, pub_nonce, share_pk, sig_share.sig)) {
+          if (!verify_partial_sig(context, pub_nonce, share_pk, sig_share.psig)) {
             throw new Error('sig share failed validation')
           }
           return sig_share
         })
 
         // Aggregate the partial signatures into a single signature.
-        const signature = combine_sig_shares(context, psigs)
-        const is_valid  = verify_sig(context, message, signature)
+        const signature = combine_partial_sigs(context, psigs)
+        const is_valid  = verify_final_sig(context, message, signature)
 
         if (!is_valid) {
           throw new Error('final signature failed validation')

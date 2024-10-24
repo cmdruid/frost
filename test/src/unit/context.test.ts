@@ -1,11 +1,11 @@
 import { Buff }       from '@cmdcode/buff'
 import { Test }       from 'tape'
 import { SpecVector } from '../types.js'
+import { get_record } from '@bifrost/util'
 
 import {
   compute_nonce_binders,
   get_commit_prefix,
-  get_record,
   compute_group_nonce,
   get_bip340_challenge
 } from '@bifrost/lib'
@@ -16,7 +16,7 @@ export default function (tape : Test, vector : SpecVector) {
     const { challenge, grp_pnonce, grp_pubkey, grp_prefix, message }  = vector.group
 
     const pnonces = vector.members.map(({ idx, pnonce_h, pnonce_b }) => {
-      return { idx, pnonce_h, pnonce_b }
+      return { idx, hidden_pn: pnonce_h, binder_pn: pnonce_b }
     })
 
     const prefix  = get_commit_prefix(pnonces, grp_pubkey, message).hex

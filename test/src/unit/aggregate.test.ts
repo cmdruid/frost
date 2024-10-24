@@ -2,7 +2,7 @@ import { Test }       from 'tape'
 import { SpecVector } from '../types.js'
 
 import {
-  combine_sig_shares,
+  combine_partial_sigs,
   get_session_ctx,
   verify_final_sig
 } from '@bifrost/lib'
@@ -13,16 +13,16 @@ export default function (tape : Test, vector : SpecVector) {
     const { grp_pubkey, message, sig } = vector.group
     
     const pnonces = vector.members.map(({ idx, pnonce_h, pnonce_b }) => {
-      return { idx, pnonce_h, pnonce_b }
+      return { idx, hidden_pn: pnonce_h, binder_pn: pnonce_b }
     })
 
     const context = get_session_ctx(grp_pubkey, pnonces, message)
 
     const sig_shares = vector.members.map(({ idx, psig }) => {
-      return { idx, sig : psig }
+      return { idx, psig }
     })
 
-    const signature = combine_sig_shares(context, sig_shares)
+    const signature = combine_partial_sigs(context, sig_shares)
 
     t.equals(signature, sig, 'aggregate signature should match vector')
 

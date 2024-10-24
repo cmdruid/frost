@@ -13,14 +13,14 @@ import {
 
 import type {
   SecretShare,
-  TrustedDealerPackage
+  SharePackage
 } from '@/types/index.js'
 
-export function create_share_package (
+export function create_share_pkg (
   secrets     : Bytes[],
   threshold   : number,
   share_max   : number,
-) : TrustedDealerPackage {
+) : SharePackage {
   // Create the coefficients for the polynomial.
   const coeffs       = create_coeffs(secrets, threshold)
   // Create the secret shares for each member.

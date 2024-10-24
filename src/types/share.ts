@@ -7,3 +7,9 @@ export interface PublicShare {
   idx    : number,
   pubkey : string
 }
+
+export interface SharePackage {
+  sec_shares   : SecretShare[],
+  vss_commits  : string[],
+  group_pubkey : string
+}

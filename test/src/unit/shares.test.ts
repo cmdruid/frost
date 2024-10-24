@@ -1,17 +1,17 @@
 import { Test }       from 'tape'
 import { SpecVector } from '../types.js'
+import { get_record } from '@bifrost/util'
 
 import {
-  create_share_package,
   combine_secret_shares,
-  get_record,
+  create_share_pkg,
   verify_share_membership
 } from '@bifrost/lib'
 
 export default function (tape : Test, vector : SpecVector) {
   const { commits, secrets, share_min, share_max } = vector.group
   tape.test('Testing share commitments', t => {
-    const pkg = create_share_package(secrets, share_min, share_max)
+    const pkg = create_share_pkg(secrets, share_min, share_max)
 
     for (let i = 0; i < commits.length; i++) {
       t.equal(pkg.vss_commits[i], commits[i], `[${i}] commit key matches vector`)

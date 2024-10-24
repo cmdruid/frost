@@ -1,5 +1,6 @@
 import { Test }       from 'tape'
 import { SpecVector } from '../types.js'
+
 import {
   get_pubkey,
   get_session_ctx,
@@ -13,7 +14,7 @@ export default function (tape : Test, vector : SpecVector) {
     const { grp_pubkey, message } = vector.group
 
     const pnonces = vector.members.map(({ idx, pnonce_h, pnonce_b }) => {
-      return { idx, pnonce_h, pnonce_b }
+      return { idx, binder_pn: pnonce_b, hidden_pn : pnonce_h }
     })
 
     const context = get_session_ctx(grp_pubkey, pnonces, message)
@@ -21,8 +22,8 @@ export default function (tape : Test, vector : SpecVector) {
     for (const mbr of vector.members) {
       const { idx, seckey, snonce_h, snonce_b, pnonce_h, pnonce_b } = mbr
       const secshare  = { idx, seckey }
-      const secnonce  = { idx, snonce_h, snonce_b }
-      const pubnonce  = { idx, pnonce_h, pnonce_b }
+      const secnonce  = { idx, hidden_sn: snonce_h, binder_sn: snonce_b }
+      const pubnonce  = { idx, hidden_pn: pnonce_h, binder_pn: pnonce_b }
       const sig_share = sign_msg(context, secshare, secnonce)
       
       t.equal(sig_share.psig, mbr.psig, `[${idx}] signature share should match vector`)

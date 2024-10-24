@@ -1,28 +1,24 @@
-import { SecretShare } from './share.js'
-
-export type MemberSecretPackage = MemberSecretData & GroupCommitData
-export type MemberPublicPackage = MemberPublicData & GroupCommitData
-
-export interface MemberPublicData {
-  idx      : number
-  root_pn  : string
-  share_pk : string
+export interface SecretPackage {
+  idx       : number
+  binder_sn : string
+  hidden_sn : string
+  share_sk  : string
 }
 
-export interface MemberSecretData extends MemberPublicData {
-  root_sn  : string
-  share_sk : string
+export interface CommitPackage {
+  idx       : number
+  binder_pn : string
+  hidden_pn : string
+  share_pk  : string
 }
 
-export interface GroupCommitData {
+export interface GroupPackage {
+  commits   : CommitPackage[]
   group_pk  : string
-  pubcoeffs : string[]
-  pubnonces : string[]
   threshold : number
 }
 
-export interface TrustedDealerPackage {
-  sec_shares   : SecretShare[],
-  vss_commits  : string[],
-  group_pubkey : string
+export interface DealerPackage extends GroupPackage {
+  secrets : SecretPackage[]
 }
+

@@ -3,7 +3,7 @@ import { Buff }   from '@cmdcode/buff'
 import { assert } from '@bifrost/util'
 
 import {
-  create_share_package,
+  create_share_pkg,
   combine_secret_shares,
   verify_share_membership,
   derive_dkg_share
@@ -21,7 +21,7 @@ export default function (tape : Test) {
         // Use hash of alias to create the root secret.
         const secret = Buff.str(alias).digest
         // Create a share package for the user.
-        const shares = create_share_package([ secret ], 5, 7)
+        const shares = create_share_pkg([ secret ], 5, 7)
         // Verify each share is included in the polynomial.
         shares.sec_shares.forEach(s => {
           const is_valid = verify_share_membership(shares.vss_commits, s, 5)

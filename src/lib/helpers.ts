@@ -5,7 +5,7 @@ import { _0n, _1n }    from '@/ecc/const.js'
 import { assert }      from '@/util/index.js'
 
 import {
-  serialize_group_commitment,
+  get_group_commit,
   get_bind_factor
 } from './util.js'
 
@@ -51,7 +51,7 @@ export function get_commit_prefix (
 ) : Buff {
   const msg_bytes   = Buff.bytes(message)
   const msg_hash    = H.H4(msg_bytes)
-  const commit_list = serialize_group_commitment(nonces)
+  const commit_list = get_group_commit(nonces)
   const commit_hash = H.H5(commit_list)
   return Buff.join([ group_pk, msg_hash, commit_hash ])
 }
