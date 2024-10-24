@@ -1,32 +1,77 @@
+import { Buff }   from '@cmdcode/buff'
+import { assert } from '@/util/index.js'
+
 import type {
+  CommitPackage,
   GroupPackage,
   SecretPackage
 } from '@/types/index.js'
 
 export function encode_group_pkg (
   pkg : GroupPackage
-) {
-  // Unpack object.
-  // Serialize into bytes.
-  // Return as bech32 encoded string.
+) : string {
+  const thd = Buff.num(pkg.threshold, 4)
+  const gpk = Buff.hex(pkg.group_pk,  33)
+  const com = Buff.join(pkg.commits.map(e => serialize_commit_pkg(e)))
+  return Buff.join([ gpk, thd, com ]).to_bech32m('bfgroup')
 }
 
 export function decode_group_pkg (
-  encoded : string
+  str : string
 ) : GroupPackage {
-  // Decode into bytes.
-  // Parse back into parts.
-  // Return as package object
+  const stream    = Buff.bech32m(str).stream
+  const group_pk  = stream.read(33).hex
+  const threshold = stream.read(4).num
+  assert.ok(stream.size % 103 === 0, 'commit data is malformed')
+  const count   = stream.size / 103
+  const commits : CommitPackage[] = []
+  for (let i = 0; i < count; i++) {
+    const cbytes = stream.read(103)
+    commits.push(deserialize_commit_pkg(cbytes))
+  }
+  return { commits, group_pk, threshold }
 }
 
 export function encode_secret_pkg (
   pkg : SecretPackage
-) {
-
+) : string {
+  const idx = Buff.num(pkg.idx, 4)
+  const ssk = Buff.hex(pkg.share_sk,  32)
+  const bsn = Buff.hex(pkg.binder_sn, 32)
+  const hsn = Buff.hex(pkg.hidden_sn, 32)
+  return Buff.join([ idx, ssk, bsn, hsn ]).to_bech32m('bfshare')
 }
 
 export function decode_secret_pkg (
-  encoded : string
+  str : string
 ) : SecretPackage {
+  const stream = Buff.bech32m(str).stream
+  assert.size(stream.data, 100)
+  const idx       = stream.read(4).num
+  const share_sk  = stream.read(32).hex
+  const binder_sn = stream.read(32).hex
+  const hidden_sn = stream.read(32).hex
+  return { idx, binder_sn, hidden_sn, share_sk }
+}
 
+function serialize_commit_pkg (
+  pkg : CommitPackage
+) : Uint8Array {
+  const idx = Buff.num(pkg.idx, 4)
+  const spk = Buff.hex(pkg.share_pk,  33)
+  const bpn = Buff.hex(pkg.binder_pn, 33)
+  const hpn = Buff.hex(pkg.hidden_pn, 33)
+  return Buff.join([ idx, spk, bpn, hpn ])
+}
+
+function deserialize_commit_pkg (
+  data : Uint8Array
+) : CommitPackage {
+  const stream    = new Buff(data).stream
+  assert.size(stream.data, 103)
+  const idx       = stream.read(4).num
+  const share_pk  = stream.read(33).hex
+  const binder_pn = stream.read(33).hex
+  const hidden_pn = stream.read(33).hex
+  return { idx, binder_pn, hidden_pn, share_pk }
 }

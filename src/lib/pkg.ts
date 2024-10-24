@@ -22,7 +22,7 @@ export function generate_dealer_pkg (
   for (const share of share_pkg.sec_shares) {
     const idx       = share.idx
     const share_sk  = share.seckey
-    const share_pk  = get_pubkey(share_sk) 
+    const share_pk  = get_pubkey(share_sk)
     const nonce_pkg = create_nonce_pkg(share)
     const { binder_sn, hidden_sn } = nonce_pkg.secnonce
     const { binder_pn, hidden_pn } = nonce_pkg.pubnonce
@@ -30,7 +30,7 @@ export function generate_dealer_pkg (
     secrets.push({ idx, binder_sn, hidden_sn, share_sk })
   }
 
-  return { commits, group_pk, secrets, threshold }
+  return { group: { commits, group_pk, threshold }, secrets }
 }
 
 export function rotate_dealer_pkg () {

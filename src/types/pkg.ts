@@ -18,7 +18,7 @@ export interface GroupPackage {
   threshold : number
 }
 
-export interface DealerPackage extends GroupPackage {
+export interface DealerPackage {
+  group   : GroupPackage
   secrets : SecretPackage[]
 }
-
