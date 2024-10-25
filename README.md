@@ -9,50 +9,54 @@ The FROST protocol specifies two rounds for producing a threshold signature.
 **Initial setup of parameters (using a trusted dealer):**
 
 ```ts
-import { trusted_dealer_keygen } from '@bifrost/keygen'
-import { random_bytes }          from '@bifrost/util'
+import { create_dealer_pkg } from '@bifrost/lib'
 
-const secrets  = [ random_bytes(32) ]
-const message  = new TextEncoder().encode('hello world!')
-const thold    = 11
-const share_ct = 15
+const secrets     = [ 'optional_secret_key' ]
+const message     = new TextEncoder().encode('hello world!')
+const threshold   = 11
+const share_count = 15
 
 // Generate a secret, package of shares, and group key.
-const pkg = trusted_dealer_keygen(secrets, thold, share_ct)
+const pkg = create_dealer_pkg(secrets, thold, share_ct)
 ```
 
 **Round 1 Example (nonce commitments):**
 
 ```ts
-import { commit } from '@bifrost/proto'
+import { create_commit_pkg } from '@bifrost/lib'
 
 // Use a t amount of shares to create nonce commitments.
-const members = pkg.shares.slice(0, thold).map(e => commit(e))
-// Collect the commitments into an array.
-const commits = members.map(e => e.nonce_commit)
+const commits = pkg.shares.slice(0, thold).map(e => {
+  return create_commit_pkg(e)
+})
 ```
 
 **Round 2 Example (signing with secret shares):**
 
 ```ts
-import { get_context, sign } from '@bifrost/sign'
+import { get_context, sign } from '@bifrost/lib'
 
 // Compute some context data for the signing session.
-const context = get_context(commits, pkg.group_pubkey, message)
+const context = get_session_context (
+  commits, pkg.group_pubkey, message
+)
 // Create the partial signatures for a given signing context.
-const psigs   = members.map((_, i) => sign(context, pkg.shares[i], members[i]))
+const psigs = members.map((_, i) => {
+  return sign_msg(context, pkg.shares[i], commits[i])
+})
 ```
 
 Once a threshold (t) number of shares have been collected, you can aggregate them into a single signature:
 
 ```ts
-import { aggregate }  from '@bifrost/proto'
-import { verify_sig } from '@bifrost/sign'
+import { combine_partial_sigs, verify_final_sig } from '@bifrost/lib'
 
 // Aggregate the partial signatures into a single signature.
-const signature = aggregate(commits, message, pkg.group_pubkey, psigs)
+const signature = combine_partial_sigs (
+  commits, message, pkg.group_pubkey, psigs
+)
 // Check that the signature is valid
-const is_valid  = verify_sig(context, signature)
+const is_valid = verify_final_sig(context, signature)
 
 console.log('is valid:', is_valid)
 ```

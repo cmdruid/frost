@@ -20,7 +20,7 @@ import type {
 /**
  * Creates a commitment package for a FROST signing session.
  */
-export function create_nonce_pkg (
+export function create_commit_pkg (
   secret_share : SecretShare,
   hidden_seed ?: Bytes,
   binder_seed ?: Bytes

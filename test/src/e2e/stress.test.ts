@@ -4,7 +4,7 @@ import { get_record, random_bytes } from '@bifrost/util'
 
 import {
   combine_partial_sigs,
-  create_nonce_pkg,
+  create_commit_pkg,
   create_share_pkg,
   get_pubkey,
   get_session_ctx,
@@ -41,7 +41,7 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
         // })
 
         // Use a t amount of shares to create nonce commitments.
-        const members = sec_shares.slice(0, thold).map(e => create_nonce_pkg(e, nseed_h, nseed_b))
+        const members = sec_shares.slice(0, thold).map(e => create_commit_pkg(e, nseed_h, nseed_b))
 
         // Collect the commitments into an array.
         const sec_nonces  = members.map(mbr => mbr.secnonce)

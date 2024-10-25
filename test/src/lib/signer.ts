@@ -2,7 +2,7 @@ import { get_record, random_bytes } from '@bifrost/util'
 
 import {
   combine_partial_sigs,
-  create_nonce_pkg,
+  create_commit_pkg,
   create_share_pkg,
   get_pubkey,
   get_session_ctx,
@@ -42,7 +42,7 @@ export function frost_sign (
   const { group_pubkey, sec_shares } = pkg
   // Use a t amount of shares to create nonce commitments.
   const members = sec_shares.slice(0, threshold).map(e => {
-    return create_nonce_pkg(e)
+    return create_commit_pkg(e)
   })
   // Collect the commitments into an array.
   const sec_nonces  = members.map(mbr => mbr.secnonce)

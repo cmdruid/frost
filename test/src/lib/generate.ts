@@ -4,7 +4,7 @@ import { get_record, random_bytes } from '@bifrost/util'
 
 import {
   combine_partial_sigs,
-  create_nonce_pkg,
+  create_commit_pkg,
   create_share_pkg,
   get_session_ctx,
   sign_msg,
@@ -27,7 +27,7 @@ const is_valid_shares = sec_shares.every(e => verify_share_membership(vss_commit
 if (!is_valid_shares) throw new Error('shares failed validation')
 // Use a t amount of shares to create nonce commitments.
 const members     = sec_shares.slice(0, thold)
-const commits     = members.map(e => create_nonce_pkg(e, nseed_h, nseed_b))
+const commits     = members.map(e => create_commit_pkg(e, nseed_h, nseed_b))
 // Collect the commitments into an array.
 const sec_nonces  = commits.map(mbr => mbr.secnonce)
 const pub_nonces  = commits.map(mbr => mbr.pubnonce)

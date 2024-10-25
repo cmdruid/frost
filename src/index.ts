@@ -6,5 +6,3 @@ import CONST  from './const.js'
 import Schema from './schema/index.js'
 
 export { CONST, ECC, Lib, Schema, Util }
-
-export default { CONST, ECC, Lib, Schema, Util }

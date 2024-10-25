@@ -42,7 +42,7 @@
     }
   },
   "scripts": {
-    "build": "yarn tsc && yarn rollup -c rollup.config.ts --configPlugin typescript",
+    "build": "./script/build.sh",
     "lint": "eslint . --ext .ts",
     "load": "tsx --tsconfig ./test/tsconfig.json",
     "release": "yarn lint && yarn test && yarn build",

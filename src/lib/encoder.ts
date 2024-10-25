@@ -10,10 +10,12 @@ import type {
 export function encode_group_pkg (
   pkg : GroupPackage
 ) : string {
-  const thd = Buff.num(pkg.threshold, 4)
-  const gpk = Buff.hex(pkg.group_pk,  33)
-  const com = Buff.join(pkg.commits.map(e => serialize_commit_pkg(e)))
-  return Buff.join([ gpk, thd, com ]).to_bech32m('bfgroup')
+  const thd  = Buff.num(pkg.threshold, 4)
+  const gpk  = Buff.hex(pkg.group_pk,  33)
+  const com  = pkg.commits.map(e => serialize_commit_pkg(e))
+  const data = Buff.join([ gpk, thd, ...com ])
+  assert.size(data, 37 + (com.length * 103))
+  return data.to_bech32m('bfgroup')
 }
 
 export function decode_group_pkg (
@@ -29,17 +31,20 @@ export function decode_group_pkg (
     const cbytes = stream.read(103)
     commits.push(deserialize_commit_pkg(cbytes))
   }
+  assert.size(stream.data, 0)
   return { commits, group_pk, threshold }
 }
 
 export function encode_secret_pkg (
   pkg : SecretPackage
 ) : string {
-  const idx = Buff.num(pkg.idx, 4)
-  const ssk = Buff.hex(pkg.share_sk,  32)
-  const bsn = Buff.hex(pkg.binder_sn, 32)
-  const hsn = Buff.hex(pkg.hidden_sn, 32)
-  return Buff.join([ idx, ssk, bsn, hsn ]).to_bech32m('bfshare')
+  const idx  = Buff.num(pkg.idx, 4)
+  const ssk  = Buff.hex(pkg.share_sk,  32)
+  const bsn  = Buff.hex(pkg.binder_sn, 32)
+  const hsn  = Buff.hex(pkg.hidden_sn, 32)
+  const data = Buff.join([ idx, ssk, bsn, hsn ])
+  assert.size(data, 100)
+  return data.to_bech32m('bfshare')
 }
 
 export function decode_secret_pkg (
@@ -51,6 +56,7 @@ export function decode_secret_pkg (
   const share_sk  = stream.read(32).hex
   const binder_sn = stream.read(32).hex
   const hidden_sn = stream.read(32).hex
+  assert.size(stream.data, 0)
   return { idx, binder_sn, hidden_sn, share_sk }
 }
 
@@ -73,5 +79,6 @@ function deserialize_commit_pkg (
   const share_pk  = stream.read(33).hex
   const binder_pn = stream.read(33).hex
   const hidden_pn = stream.read(33).hex
+  assert.size(stream.data, 0)
   return { idx, binder_pn, hidden_pn, share_pk }
 }
