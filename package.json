@@ -43,7 +43,7 @@
   },
   "scripts": {
     "build": "./script/build.sh",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint",
     "load": "tsx --tsconfig ./test/tsconfig.json",
     "release": "yarn lint && yarn test && yarn build",
     "scratch": "yarn load test/scratch.ts",

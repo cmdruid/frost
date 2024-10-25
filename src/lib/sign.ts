@@ -51,7 +51,7 @@ export function sign_msg (
   const sk  = mod_n(Q.parity * Q.state * seckey)
   const sig = mod_n(cnonce + coefficient * sk * challenge)
 
-  return { idx : secshare.idx, psig : Buff.big(sig, 32).hex }
+  return { idx: secshare.idx, psig: Buff.big(sig, 32).hex }
 }
 
 export function sign_with_pkg (
@@ -60,7 +60,7 @@ export function sign_with_pkg (
 ) {
   const { idx, share_sk, binder_sn, hidden_sn } = spkg
   const secnonce = { idx, binder_sn, hidden_sn }
-  const secshare = { idx, seckey : share_sk }
+  const secshare = { idx, seckey: share_sk }
   return sign_msg(ctx, secshare, secnonce)
 }
 

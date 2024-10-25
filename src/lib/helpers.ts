@@ -66,7 +66,7 @@ export function compute_nonce_binders (
   return nonces.map(({ idx }) => {
     const scalar    = G.SerializeScalar(idx)
     const rho_input = Buff.join([ prefix, scalar ])
-    return { idx, key : H.H1(rho_input).hex }
+    return { idx, key: H.H1(rho_input).hex }
   })
 }
 
