@@ -1,8 +1,8 @@
-import { Buff, Bytes }      from '@cmdcode/buff'
-import { _1n }              from '@/ecc/const.js'
-import { get_point_state }  from '@/ecc/state.js'
-import { lift_x }           from '@/ecc/util.js'
-import { create_share_pkg } from './shares.js'
+import { Buff, Bytes }       from '@cmdcode/buff'
+import { _1n }               from '@/ecc/const.js'
+import { get_point_state }   from '@/ecc/state.js'
+import { lift_x }            from '@/ecc/util.js'
+import { create_share_pkg }  from './shares.js'
 import { create_commit_pkg } from './proto.js'
 
 import { get_nonce_ids, get_pubkey } from './util.js' 
@@ -109,5 +109,5 @@ export function get_dealer_ctx (
     secrets.push({ idx, binder_sn, hidden_sn, share_sk: seckey })
   }
 
-  return { group: { commits, group_pk, threshold }, secrets }
+  return { commits, group_pk, secrets, threshold }
 }

@@ -4,7 +4,8 @@ import { G }               from '@/ecc/index.js'
 import { lift_x, mod_n }   from '@/ecc/util.js'
 import { _1n, curve }      from '@/ecc/const.js'
 import { interpolate_x }   from './poly.js'
-import { get_bind_factor } from './util.js' 
+
+import { get_bind_factor, get_pubkey } from './util.js' 
 
 import type {
   PublicNonce,
@@ -12,10 +13,8 @@ import type {
   SecretShare,
   PartialSignature,
   GroupKeyContext,
-  GroupSessionCtx,
-  SecretPackage
+  GroupSessionCtx
 } from '@/types/index.js'
-import { get_record } from '@/util/helpers.js'
 
 /**
  * Sign a message using a secret share and secret nonce value.
@@ -51,17 +50,11 @@ export function sign_msg (
   const sk  = mod_n(Q.parity * Q.state * seckey)
   const sig = mod_n(cnonce + coefficient * sk * challenge)
 
-  return { idx: secshare.idx, psig: Buff.big(sig, 32).hex }
-}
-
-export function sign_with_pkg (
-  ctx  : GroupSessionCtx,
-  spkg : SecretPackage
-) {
-  const { idx, share_sk, binder_sn, hidden_sn } = spkg
-  const secnonce = { idx, binder_sn, hidden_sn }
-  const secshare = { idx, seckey: share_sk }
-  return sign_msg(ctx, secshare, secnonce)
+  return {
+    idx    : secshare.idx,
+    pubkey : get_pubkey(secshare.seckey),
+    psig   : Buff.big(sig, 32).hex
+  }
 }
 
 /**
@@ -103,15 +96,6 @@ export function verify_partial_sig (
   const pki  = G.ScalarMulti(public_elem, chal)
   const R    = G.ElementAdd(nonce_elem, pki)
   return sG.x === R.x
-}
-
-export function verify_sig_pkg (
-  ctx  : GroupSessionCtx,
-  pub  : string,
-  psig : PartialSignature
-) {
-  const pnonce = get_record(ctx.pub_nonces, psig.idx)
-  return verify_partial_sig(ctx, pnonce, pub, psig.psig)
 }
 
 /**

@@ -15,3 +15,8 @@ export interface PublicNonce {
   binder_pn : string,
   hidden_pn : string
 }
+
+export interface BindFactor {
+  idx : number,
+  key : string
+}

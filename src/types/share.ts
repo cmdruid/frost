@@ -13,3 +13,10 @@ export interface SharePackage {
   vss_commits  : string[],
   group_pubkey : string
 }
+
+
+export interface PartialSignature {
+  idx    : number,
+  pubkey : string,
+  psig   : string
+}

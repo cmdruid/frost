@@ -1,5 +1,6 @@
-import { PointState }  from './ecc.js'
-import { PublicNonce } from './nonce.js'
+import { PointState } from './ecc.js'
+
+import { BindFactor, PublicNonce } from './nonce.js'
 
 export type GroupSessionCtx = GroupKeyContext & GroupCommitContext
 
@@ -19,14 +20,4 @@ export interface GroupCommitContext {
   identifiers  : bigint[],
   message      : string,
   pub_nonces   : PublicNonce[],
-}
-
-export interface BindFactor {
-  idx : number,
-  key : string
-}
-
-export interface PartialSignature {
-  idx  : number,
-  psig : string
 }
