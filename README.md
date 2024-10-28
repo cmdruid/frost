@@ -9,7 +9,7 @@ The FROST protocol specifies two rounds for producing a threshold signature.
 **Initial setup of parameters (using a trusted dealer):**
 
 ```ts
-import { create_dealer_pkg } from '@cmdcode/frost/lib'
+import { create_share_pkg } from '@cmdcode/frost/lib'
 
 const secrets     = [ 'optional_secret_key' ]
 const message     = new TextEncoder().encode('hello world!')
@@ -17,7 +17,7 @@ const threshold   = 11
 const share_count = 15
 
 // Generate a secret, package of shares, and group key.
-const pkg = create_dealer_pkg(secrets, thold, share_ct)
+const { group_pubkey, shares } = create_share_pkg(secrets, thold, share_ct)
 ```
 
 **Round 1 Example (nonce commitments):**
@@ -26,8 +26,8 @@ const pkg = create_dealer_pkg(secrets, thold, share_ct)
 import { create_commit_pkg } from '@cmdcode/frost/lib'
 
 // Use a t amount of shares to create nonce commitments.
-const commits = pkg.shares.slice(0, thold).map(e => {
-  return create_commit_pkg(e)
+const commits = shares.slice(0, thold).map(share => {
+  return create_commit_pkg(share)
 })
 ```
 
@@ -38,7 +38,7 @@ import { get_context, sign } from '@cmdcode/frost/lib'
 
 // Compute some context data for the signing session.
 const context = get_session_context (
-  commits, pkg.group_pubkey, message
+  commits, group_pubkey, message
 )
 // Create the partial signatures for a given signing context.
 const psigs = members.map((_, i) => {
