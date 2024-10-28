@@ -1,5 +1,4 @@
 export * from './ecc.js'
 export * from './ctx.js'
 export * from './nonce.js'
-export * from './pkg.js'
 export * from './share.js'

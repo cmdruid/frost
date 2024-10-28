@@ -1,42 +1,52 @@
-// Create a set of shares.
+import { get_record, random_bytes } from '@cmdcode/frost/util'
 
-import { Buff } from '@cmdcode/buff'
+import {
+  combine_partial_sigs,
+  create_commit_pkg,
+  create_share_pkg,
+  get_pubkey,
+  get_session_ctx,
+  sign_msg,
+  verify_final_sig,
+  verify_partial_sig
+} from '@cmdcode/frost/lib'
 
-import { combine_partial_sigs, create_dealer_pkg, create_psig_pkg, decode_group_pkg, decode_secret_pkg, encode_group_pkg, encode_secret_pkg, get_package_ctx, get_pubkey, get_session_ctx, verify_final_sig, verify_psig_pkg } from '@bifrost/lib'
+const seckey  = random_bytes(32).hex
+const message = random_bytes(32).hex
 
-const seckey  = Buff.random(32).hex
-const pubkey  = get_pubkey(seckey)
-const message = Buff.random(32).hex 
+const secrets  = [ seckey ]
+const share_ct = 3
+const thold    = 2
 
-console.log(seckey)
-console.log(message)
-console.log('master pubkey:', pubkey)
+// Generate a secret, package of shares, and group key.
+const { group_pubkey, sec_shares } = create_share_pkg(secrets, thold, share_ct)
 
-const pkg = create_dealer_pkg([ seckey ], 2, 3)
+// Use a t amount of shares to create nonce commitments.
+const commits = sec_shares.slice(0, thold).map(e => create_commit_pkg(e))
 
-console.log('pkg:', pkg)
+// Collect the commitments into an array.
+const sec_nonces = commits.map(mbr => mbr.secnonce)
+const pub_nonces = commits.map(mbr => mbr.pubnonce)
 
-const encoded_group   = encode_group_pkg(pkg)
+// Compute some context data for the signing session.
+const context = get_session_ctx(group_pubkey, pub_nonces, message)
 
-console.log('group:', encoded_group)
+// Create the partial signatures for a given signing context.
+const psigs = context.identifiers.map(i => {
+  const idx = Number(i)
+  const sec_share = get_record(sec_shares, idx)
+  const sec_nonce = get_record(sec_nonces, idx)
+  const pub_nonce = get_record(pub_nonces, idx)
+  const sig_share = sign_msg(context, sec_share, sec_nonce)
+  const share_pk  = get_pubkey(sec_share.seckey)
+  if (!verify_partial_sig(context, pub_nonce, share_pk, sig_share.psig)) {
+    throw new Error('sig share failed validation')
+  }
+  return sig_share
+})
 
-const encoded_secrets = pkg.secrets.map(e => encode_secret_pkg(e))
+// Aggregate the partial signatures into a single signature.
+const signature = combine_partial_sigs(context, psigs)
+const is_valid  = verify_final_sig(context, message, signature)
 
-console.log('secrets:', encoded_secrets)
-
-const decoded_group   = decode_group_pkg(encoded_group)
-const decoded_secrets = encoded_secrets.map(e => decode_secret_pkg(e))
-
-const ctx     = get_package_ctx(decoded_group, message)
-const signer1 = decoded_secrets[0]
-const signer2 = decoded_secrets[2]
-
-const psig1   = create_psig_pkg(ctx, signer1)
-const psig2   = create_psig_pkg(ctx, signer2)
-
-console.log('psig1 valid:', verify_psig_pkg(ctx, psig1))
-console.log('psig2 valid:', verify_psig_pkg(ctx, psig2))
-
-const sig = combine_partial_sigs(ctx, [ psig1, psig2 ])
-
-console.log('final sig valid:', verify_final_sig(ctx, message, sig))
+console.log('is valid:', is_valid)

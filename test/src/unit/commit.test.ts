@@ -1,7 +1,7 @@
 import { Test }       from 'tape'
 import { SpecVector } from '../types.js'
 
-import { create_commit_pkg } from '@bifrost/lib'
+import { create_commit_pkg } from '@cmdcode/frost/lib'
 
 export default function (tape : Test, vector : SpecVector) {
   tape.test('Testing nonce commitments', t => {

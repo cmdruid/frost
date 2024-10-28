@@ -2,12 +2,12 @@
   "compilerOptions": {
     "baseUrl": "..",
     "paths": {
-      "@/*"           : [ "src/*"             ],
-      "@/test/*"      : [ "test/src/*"        ],
-      "@bifrost"      : [ "src/index.js"      ],
-      "@bifrost/ecc"  : [ "src/ecc/index.js"  ],
-      "@bifrost/lib"  : [ "src/lib/index.js"  ],
-      "@bifrost/util" : [ "src/util/index.js" ],
+      "@/*"      : [ "src/*"      ],
+      "@/test/*" : [ "test/src/*" ],
+      "@cmdcode/frost"      : [ "src/index.js"      ],
+      "@cmdcode/frost/ecc"  : [ "src/ecc/index.js"  ],
+      "@cmdcode/frost/lib"  : [ "src/lib/index.js"  ],
+      "@cmdcode/frost/util" : [ "src/util/index.js" ],
     },
     "module": "NodeNext",
     "target": "ESNext",

@@ -1,4 +1,4 @@
-import { get_record, random_bytes } from '@bifrost/util'
+import { get_record, random_bytes } from '@cmdcode/frost/util'
 
 import {
   combine_partial_sigs,
@@ -9,8 +9,8 @@ import {
   sign_msg,
   verify_final_sig,
   verify_partial_sig,
-  verify_share_membership
-} from '@bifrost/lib'
+  verify_share
+} from '@cmdcode/frost/lib'
 
 import type { SharePackage } from '@/types/index.js'
 
@@ -24,7 +24,7 @@ export function frost_keygen (
   const pkg = create_share_pkg(secrets, threshold, max_shares)
   //
   pkg.sec_shares.forEach(e => {
-    if (!verify_share_membership(pkg.vss_commits, e, threshold)) {
+    if (!verify_share(pkg.vss_commits, e, threshold)) {
       throw new Error(`share ${e.idx} failed validation:, ${e.seckey}`)
     }
   })

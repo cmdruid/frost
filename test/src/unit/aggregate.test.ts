@@ -3,9 +3,10 @@ import { SpecVector } from '../types.js'
 
 import {
   combine_partial_sigs,
+  get_pubkey,
   get_session_ctx,
   verify_final_sig
-} from '@bifrost/lib'
+} from '@cmdcode/frost/lib'
 
 export default function (tape : Test, vector : SpecVector) {
   tape.test('Testing signature aggregation and verification', t => {
@@ -18,8 +19,9 @@ export default function (tape : Test, vector : SpecVector) {
 
     const context = get_session_ctx(grp_pubkey, pnonces, message)
 
-    const sig_shares = vector.members.map(({ idx, psig }) => {
-      return { idx, psig }
+    const sig_shares = vector.members.map(({ idx, psig, seckey }) => {
+      const pubkey = get_pubkey(seckey)
+      return { idx, psig, pubkey }
     })
 
     const signature = combine_partial_sigs(context, sig_shares)

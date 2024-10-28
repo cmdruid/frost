@@ -6,7 +6,7 @@ import {
   get_session_ctx,
   sign_msg,
   verify_partial_sig
-} from '@bifrost/lib'
+} from '@cmdcode/frost/lib'
 
 export default function (tape : Test, vector : SpecVector) {
   tape.test('Testing signature share creation and verification', t => {

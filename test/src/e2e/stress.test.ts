@@ -1,6 +1,6 @@
 import { Test } from 'tape'
 
-import { get_record, random_bytes } from '@bifrost/util'
+import { get_record, random_bytes } from '@cmdcode/frost/util'
 
 import {
   combine_partial_sigs,
@@ -11,7 +11,7 @@ import {
   sign_msg,
   verify_final_sig,
   verify_partial_sig
-} from '@bifrost/lib'
+} from '@cmdcode/frost/lib'
 
 export default function (t : Test, rounds = 10, max_shares = 21) {
   t.test('Stress test the full protocol', t => {
@@ -29,7 +29,7 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
 
       try {
         // Generate a secret, package of shares, and group key.
-        const { vss_commits, group_pubkey, sec_shares } = create_share_pkg(secrets, thold, share_ct)
+        const { group_pubkey, sec_shares } = create_share_pkg(secrets, thold, share_ct)
 
         // This part is really slow.
 

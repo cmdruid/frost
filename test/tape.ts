@@ -10,7 +10,7 @@ import tx_test      from './src/e2e/tx.test.js'
 
 import vector from './src/vectors/spec.json' assert { type : 'json' }
 
-tape('Bifrost Test Suite', async t => {
+tape('Frost Test Suite', async t => {
   
   shares_test(t,  vector)
   dkg_test(t)

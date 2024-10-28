@@ -1,6 +1,6 @@
 import { Buff } from '@cmdcode/buff'
 
-import { get_record, random_bytes } from '@bifrost/util'
+import { get_record, random_bytes } from '@cmdcode/frost/util'
 
 import {
   combine_partial_sigs,
@@ -9,8 +9,8 @@ import {
   get_session_ctx,
   sign_msg,
   verify_final_sig,
-  verify_share_membership
-} from '@bifrost/lib'
+  verify_share
+} from '@cmdcode/frost/lib'
 
 const secrets  = [ random_bytes(32), random_bytes(32) ]
 const message  = new TextEncoder().encode('hello world!')
@@ -22,7 +22,7 @@ const nseed_b = secrets[1].hex
 // Generate a secret, package of shares, and group key.
 const { vss_commits, group_pubkey, sec_shares } = create_share_pkg(secrets, thold, share_ct)
 // 
-const is_valid_shares = sec_shares.every(e => verify_share_membership(vss_commits, e, thold))
+const is_valid_shares = sec_shares.every(e => verify_share(vss_commits, e, thold))
 // 
 if (!is_valid_shares) throw new Error('shares failed validation')
 // Use a t amount of shares to create nonce commitments.

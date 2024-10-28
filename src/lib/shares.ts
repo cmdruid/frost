@@ -17,14 +17,14 @@ import type {
 } from '@/types/index.js'
 
 export function create_share_pkg (
-  secrets     : Bytes[],
-  threshold   : number,
-  share_max   : number,
+  secrets   : Bytes[],
+  threshold : number,
+  share_max : number,
 ) : SharePackage {
   // Create the coefficients for the polynomial.
   const coeffs       = create_coeffs(secrets, threshold)
   // Create the secret shares for each member.
-  const sec_shares   = create_secret_shares(coeffs, share_max)
+  const sec_shares   = create_shares(coeffs, share_max)
   // Create the commitments for each share.
   const vss_commits  = get_coeff_commits(coeffs)
   // Get the group pubkey for the shares.
@@ -33,7 +33,7 @@ export function create_share_pkg (
   return { group_pubkey, sec_shares, vss_commits }
 }
 
-export function derive_dkg_share (
+export function derive_share (
   shares : SecretShare[]
 ) : SecretShare {
   // Check that each share has the same idx.
@@ -53,16 +53,16 @@ export function derive_dkg_share (
 /**
  * Creates a list of secret shares for a given polynomial.
  */
-export function create_secret_shares (
-  group_coeffs : bigint[],
-  share_count  : number
+export function create_shares (
+  coeffs : bigint[],
+  count  : number
 ) : SecretShare[] {
   // Init our share list.
   const shares  = []
   // For each share to generate (skipping the root):
-  for (let i = 1; i < share_count + 1; i++) {
+  for (let i = 1; i < count + 1; i++) {
     // Evaluate the polynomial at the index (i).
-    const scalar = evaluate_x(group_coeffs, BigInt(i))
+    const scalar = evaluate_x(coeffs, BigInt(i))
     // Mod and convert the scalar into a hex value.
     const seckey = Buff.big(scalar, 32).hex
     // Add the index and share.
@@ -75,7 +75,7 @@ export function create_secret_shares (
 /**
  * Combine secret shares and reconstruct the root secret.
  */
-export function combine_secret_shares (shares : SecretShare[]) {
+export function combine_shares (shares : SecretShare[]) {
   // Convert each share into coordinates.
   const coords = shares.map(share => [
     BigInt(share.idx),
@@ -103,7 +103,7 @@ export function get_coeff_commits (coeffs : Bytes[]) : string[] {
 /**
  * Verify a secret share using a list of vss commitments.
  */
-export function verify_share_membership (
+export function verify_share (
   commits : Bytes[],
   share   : SecretShare,
   thold   : number

@@ -1,7 +1,7 @@
 import { mod, pow } from '@noble/curves/abstract/modular'
 
 import CONST, { Point } from './const.js'
-import { Buff, Bytes } from '@cmdcode/buff'
+import { Buff, Bytes }  from '@cmdcode/buff'
 
 const { curve } = CONST
 

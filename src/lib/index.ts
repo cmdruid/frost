@@ -1,7 +1,5 @@
 export * from './context.js'
-export * from './encoder.js'
 export * from './helpers.js'
-export * from './pkg.js'
 export * from './poly.js'
 export * from './proto.js'
 export * from './shares.js'

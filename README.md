@@ -1,4 +1,4 @@
-# Bifröst
+# FROST
 
 Fast, round-optimized schnorr threshold signatures for Bitcoin.
 
@@ -9,7 +9,7 @@ The FROST protocol specifies two rounds for producing a threshold signature.
 **Initial setup of parameters (using a trusted dealer):**
 
 ```ts
-import { create_dealer_pkg } from '@bifrost/lib'
+import { create_dealer_pkg } from '@cmdcode/frost/lib'
 
 const secrets     = [ 'optional_secret_key' ]
 const message     = new TextEncoder().encode('hello world!')
@@ -23,7 +23,7 @@ const pkg = create_dealer_pkg(secrets, thold, share_ct)
 **Round 1 Example (nonce commitments):**
 
 ```ts
-import { create_commit_pkg } from '@bifrost/lib'
+import { create_commit_pkg } from '@cmdcode/frost/lib'
 
 // Use a t amount of shares to create nonce commitments.
 const commits = pkg.shares.slice(0, thold).map(e => {
@@ -34,7 +34,7 @@ const commits = pkg.shares.slice(0, thold).map(e => {
 **Round 2 Example (signing with secret shares):**
 
 ```ts
-import { get_context, sign } from '@bifrost/lib'
+import { get_context, sign } from '@cmdcode/frost/lib'
 
 // Compute some context data for the signing session.
 const context = get_session_context (
@@ -49,7 +49,7 @@ const psigs = members.map((_, i) => {
 Once a threshold (t) number of shares have been collected, you can aggregate them into a single signature:
 
 ```ts
-import { combine_partial_sigs, verify_final_sig } from '@bifrost/lib'
+import { combine_partial_sigs, verify_final_sig } from '@cmdcode/frost/lib'
 
 // Aggregate the partial signatures into a single signature.
 const signature = combine_partial_sigs (
