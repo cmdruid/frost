@@ -1,5 +1,5 @@
 import { Buff, Bytes }      from '@cmdcode/buff'
-import { _0n, _1n, field }  from '@/ecc/const.js'
+import { _0n, _1n, field }  from '@/const.js'
 import { mod_n }            from '@/ecc/util.js'
 import { assert }           from '@/util/index.js'
 

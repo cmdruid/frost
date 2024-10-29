@@ -1,9 +1,9 @@
-import { mod, pow } from '@noble/curves/abstract/modular'
+import { Buff, Bytes } from '@cmdcode/buff'
+import { mod, pow }    from '@noble/curves/abstract/modular'
 
-import CONST, { Point } from './const.js'
-import { Buff, Bytes }  from '@cmdcode/buff'
+import CONST from '@/const.js'
 
-const { curve } = CONST
+const { curve, Point } = CONST
 
 export function mod_n (x : bigint) {
   return mod(x, curve.n)

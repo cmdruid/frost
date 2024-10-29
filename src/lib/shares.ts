@@ -1,6 +1,6 @@
 import { Buff, Bytes } from '@cmdcode/buff'
 import { G }           from '@/ecc/index.js'
-import { _0n, _1n }    from '@/ecc/const.js'
+import { _0n, _1n }    from '@/const.js'
 import { assert }      from '@/util/index.js'
 
 import { mod_n, pow_n, lift_x } from '@/ecc/util.js'

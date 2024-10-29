@@ -1,6 +1,6 @@
 import { Buff, Bytes } from '@cmdcode/buff'
+import { curve }       from '@/const.js'
 import { mod_n }       from './util.js'
-import { curve }       from './const.js'
 import * as G          from './group.js'
 
 import type {

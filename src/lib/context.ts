@@ -1,15 +1,15 @@
 import { Buff, Bytes }     from '@cmdcode/buff'
-import { _1n }             from '@/ecc/const.js'
+import { _1n }             from '@/const.js'
 import { get_point_state } from '@/ecc/state.js'
 import { lift_x }          from '@/ecc/util.js'
-import { get_nonce_ids }   from '@/lib/util.js' 
+import { get_nonce_ids }   from '@/lib/util.js'
+import { get_challenge }   from '@/lib/helpers.js'
 
 import {
-  compute_nonce_binders,
-  get_bip340_challenge,
+  get_commit_binders,
   get_commit_prefix,
-  compute_group_nonce
-} from './helpers.js'
+  get_group_nonce
+} from './commit.js'
 
 import type {
   GroupCommitContext,
@@ -50,13 +50,13 @@ export function get_commit_context (
   // Calculate the prefix for making the binding commitments.
   const bind_prefix  = get_commit_prefix(pub_nonces, group_pubkey, message).hex
   // Compute the binding values for each nonce.
-  const bind_factors = compute_nonce_binders(pub_nonces, bind_prefix)
+  const bind_factors = get_commit_binders(pub_nonces, bind_prefix)
   // Compute the group nonce value.
-  const group_pnonce = compute_group_nonce(pub_nonces, bind_factors)
+  const group_pnonce = get_group_nonce(pub_nonces, bind_factors)
   // Compile a list of identifiers from the nonces.
   const identifiers  = get_nonce_ids(pub_nonces)
   // Compute the challenge hash for the signing session.
-  const challenge    = get_bip340_challenge(group_pnonce, group_pubkey, message)
+  const challenge    = get_challenge(group_pnonce, group_pubkey, message)
   // Format the message to be signed as a hex string.
   message = Buff.bytes(message).hex
   // Return the context object.

@@ -4,10 +4,10 @@ import { SpecVector } from '../types.js'
 import { get_record } from '@cmdcode/frost/util'
 
 import {
-  compute_nonce_binders,
+  get_commit_binders,
   get_commit_prefix,
-  compute_group_nonce,
-  get_bip340_challenge
+  get_group_nonce,
+  get_challenge
 } from '@cmdcode/frost/lib'
 
 export default function (tape : Test, vector : SpecVector) {
@@ -20,7 +20,7 @@ export default function (tape : Test, vector : SpecVector) {
     })
 
     const prefix  = get_commit_prefix(pnonces, grp_pubkey, message).hex
-    const binders = compute_nonce_binders(pnonces, prefix)
+    const binders = get_commit_binders(pnonces, prefix)
 
     t.equal(prefix, grp_prefix, 'binder prefix should match vector')
 
@@ -29,11 +29,11 @@ export default function (tape : Test, vector : SpecVector) {
       t.equal(binder.key, mbr.binder, `[${mbr.idx}] binder factor should match vector`)
     }
 
-    const group_nonce = compute_group_nonce(pnonces, binders)
+    const group_nonce = get_group_nonce(pnonces, binders)
     
     t.equal(group_nonce, grp_pnonce, 'group pubnonce should match vector')
 
-    const group_chall = get_bip340_challenge(group_nonce, grp_pubkey, message)
+    const group_chall = get_challenge(group_nonce, grp_pubkey, message)
 
     t.equal(Buff.big(group_chall, 32).hex, challenge, 'group challenge should match vector')
 

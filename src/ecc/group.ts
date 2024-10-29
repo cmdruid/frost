@@ -8,7 +8,7 @@ import { mod_n }        from './util.js'
 
 import type { CurveElement } from '@/types/index.js'
 
-import CONST from './const.js'
+import CONST from '@/const.js'
 
 const { curve, Point, _0n, _1n } = CONST
 

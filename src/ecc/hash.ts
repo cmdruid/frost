@@ -4,7 +4,7 @@
 import { Buff }         from '@cmdcode/buff'
 import { sha256 }       from '@noble/hashes/sha256'
 import { secp256k1 }    from '@noble/curves/secp256k1'
-import { ctx_str }      from './const.js'
+import { ctx_str }      from '@/const.js'
 import { str_to_bytes } from './util.js'
 
 import { hash_to_field, Opts } from '@noble/curves/abstract/hash-to-curve'

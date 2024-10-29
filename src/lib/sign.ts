@@ -2,10 +2,16 @@ import { Buff, Bytes }     from '@cmdcode/buff'
 import { schnorr }         from '@noble/curves/secp256k1'
 import { G }               from '@/ecc/index.js'
 import { lift_x, mod_n }   from '@/ecc/util.js'
-import { _1n, curve }      from '@/ecc/const.js'
+import { _0n, _1n, curve } from '@/const.js'
 import { interpolate_x }   from './poly.js'
 
-import { get_bind_factor, get_pubkey } from './util.js' 
+import { get_bind_factor, get_pubkey } from './util.js'
+
+import {
+  get_commit_binders,
+  get_commit_prefix,
+  get_group_nonce
+} from './commit.js'
 
 import type {
   PublicNonce,
@@ -56,6 +62,34 @@ export function sign_msg (
     psig   : Buff.big(sig, 32).hex
   }
 }
+
+/**
+ * Combine the signature shares from a FROST signing session.
+ */
+export function combine_partial_sigs (
+  context : GroupSessionCtx,
+  psigs   : PartialSignature[]
+) {
+  //
+  const { challenge, pub_nonces, group_state, group_pubkey, message } = context
+  //
+  const { parity, tweak } = group_state
+  //
+  const commit_prefix = get_commit_prefix(pub_nonces, group_pubkey, message)
+  // Compute the binding factors
+  const group_binders = get_commit_binders(pub_nonces, commit_prefix)
+  // Compute the group commitment
+  const group_pnonce  = get_group_nonce(pub_nonces, group_binders)
+  // Compute aggregated signature
+  const s = psigs
+    .map(e => Buff.hex(e.psig).big)
+    .reduce((acc, nxt) => mod_n(acc + nxt), _0n)
+  //
+  const a = challenge * parity * tweak
+  //
+  return Buff.join([ group_pnonce.slice(2), Buff.big(mod_n(s + a), 32) ]).hex
+}
+
 
 /**
  * Verify a signature share is valid.
