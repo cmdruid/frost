@@ -1,54 +1,16 @@
 import { Buff, Bytes } from '@cmdcode/buff'
 import { G }           from '@/ecc/index.js'
 import { _0n, _1n }    from '@/const.js'
-import { assert }      from '@/util/index.js'
+import { assert, get_record }      from '@/util/index.js'
 
 import { mod_n, pow_n, lift_x } from '@/ecc/util.js'
 
 import {
-  create_coeffs,
   interpolate_root,
   evaluate_x
 } from './poly.js'
 
-import type {
-  SecretShare,
-  SharePackage
-} from '@/types/index.js'
-
-export function create_share_pkg (
-  secrets   : Bytes[],
-  threshold : number,
-  share_max : number,
-) : SharePackage {
-  // Create the coefficients for the polynomial.
-  const coeffs       = create_coeffs(secrets, threshold)
-  // Create the secret shares for each member.
-  const sec_shares   = create_shares(coeffs, share_max)
-  // Create the commitments for each share.
-  const vss_commits  = get_coeff_commits(coeffs)
-  // Get the group pubkey for the shares.
-  const group_pubkey = vss_commits[0]
-  // Return the share package object.
-  return { group_pubkey, sec_shares, vss_commits }
-}
-
-export function derive_share (
-  shares : SecretShare[]
-) : SecretShare {
-  // Check that each share has the same idx.
-  assert.is_equal_set(shares.map(e => e.idx))
-  // Get the index value of the first share.
-  const idx    = shares[0].idx
-  // Sum all secret shares into a DKG secret.
-  const secret = shares
-    .map(e => Buff.bytes(e.seckey).big)
-    .reduce((acc, cur) => acc += cur, _0n)
-  // Format group share into a secret key.
-  const seckey = Buff.big(mod_n(secret), 32).hex
-  // Return secret as a share package.
-  return { idx, seckey }
-}
+import type { SecretShare } from '@/types/index.js'
 
 /**
  * Creates a list of secret shares for a given polynomial.
@@ -72,10 +34,29 @@ export function create_shares (
   return shares
 }
 
+export function combine_shares (
+  shares : SecretShare[]
+) : SecretShare {
+  // Check that each share has the same idx.
+  assert.is_equal_set(shares.map(e => e.idx))
+  // Get the index value of the first share.
+  const idx    = shares[0].idx
+  // Sum all secret shares into a DKG secret.
+  const secret = shares
+    .map(e => Buff.bytes(e.seckey).big)
+    .reduce((acc, cur) => mod_n(acc += cur), _0n)
+  // Format group share into a secret key.
+  const seckey = Buff.big(secret, 32).hex
+  // Return secret as a share package.
+  return { idx, seckey }
+}
+
 /**
- * Combine secret shares and reconstruct the root secret.
+ * Interpolate secret shares and derive the root secret.
  */
-export function combine_shares (shares : SecretShare[]) {
+export function derive_secret (
+  shares : SecretShare[]
+) : string {
   // Convert each share into coordinates.
   const coords = shares.map(share => [
     BigInt(share.idx),
@@ -85,6 +66,26 @@ export function combine_shares (shares : SecretShare[]) {
   const secret = interpolate_root(coords)
   // Return the secret as hex.
   return Buff.big(secret).hex
+}
+
+/**
+ * Updates a list of secret shares for a given polynomial.
+ */
+export function update_shares (
+  curr_shares : SecretShare[],
+  aux_shares  : SecretShare[]
+) : SecretShare[] {
+  // Init our share list.
+  const shares = []
+  // For each share to generate (skipping the root):
+  for (let i = 0; i <= curr_shares.length; i++) {
+    const curr_share = curr_shares[i]
+    const aux_share  = get_record(aux_shares, curr_share.idx)
+    const new_share  = combine_shares([ curr_share, aux_share ])
+    shares.push(new_share)
+  }
+  // Return the list of shares.
+  return shares
 }
 
 /**

@@ -1,6 +1,7 @@
 export * from './commit.js'
 export * from './context.js'
 export * from './helpers.js'
+export * from './pkg.js'
 export * from './poly.js'
 export * from './shares.js'
 export * from './sign.js'

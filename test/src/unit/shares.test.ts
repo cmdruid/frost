@@ -3,7 +3,7 @@ import { SpecVector } from '../types.js'
 import { get_record } from '@cmdcode/frost/util'
 
 import {
-  combine_shares,
+  derive_secret,
   create_share_pkg,
   verify_share
 } from '@cmdcode/frost/lib'
@@ -26,7 +26,7 @@ export default function (tape : Test, vector : SpecVector) {
       t.true(is_valid, `[${mbr.idx}] share commit is valid using vss`)
     }
 
-    const secret = combine_shares(pkg.sec_shares)
+    const secret = derive_secret(pkg.sec_shares)
     t.equal(secret, secrets[0], 'combined shares matches root secret')
 
     t.end()

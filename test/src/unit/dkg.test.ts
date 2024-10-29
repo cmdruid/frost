@@ -4,9 +4,9 @@ import { assert } from '@cmdcode/frost/util'
 
 import {
   create_share_pkg,
-  combine_shares,
+  derive_secret,
   verify_share,
-  derive_share
+  combine_shares
 } from '@cmdcode/frost/lib'
 
 const aliases = [ 'alice', 'bob', 'carol', 'david', 'edward', 'frank', 'gerome' ]
@@ -38,18 +38,18 @@ export default function (tape : Test) {
         // Collect a share from each package at the given index.
         const shares = pkgs.map(pkg => pkg.sec_shares[idx])
         // Derive a group share and return.
-        return derive_share(shares)
+        return combine_shares(shares)
       })
 
       // Derive the group secret from the shares.
-      const secret = combine_shares(gshares.slice(0, 5))
+      const secret = derive_secret(gshares.slice(0, 5))
 
       t.equal(secret, target, 'group secret matches target')
 
       // Stress test secret derivation using randomized order.
       for (let i = 0; i < 20; i++) {
         gshares = gshares.sort(() => Math.random() - 0.5)
-        const s2 = combine_shares(gshares.slice(0, 5))
+        const s2 = derive_secret(gshares.slice(0, 5))
         assert.ok(secret === s2, 'secret does not match control')
       }
 
