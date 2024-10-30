@@ -1,7 +1,7 @@
 import { Buff, Bytes }    from '@cmdcode/buff'
 import { H, G }           from '@/ecc/index.js'
 import { _0n, _1n }       from '@/const.js'
-import { assert }         from '@/util/index.js'
+import { assert, get_record }         from '@/util/index.js'
 import { generate_nonce } from './helpers.js'
 
 import {
@@ -82,4 +82,12 @@ export function create_commit_pkg (
   const binder_pn = get_pubkey(binder_sn)
   const hidden_pn = get_pubkey(hidden_sn)
   return { idx, binder_pn, binder_sn, hidden_pn, hidden_sn }
+}
+
+export function get_commit_pkg (
+  commits : CommitPackage[],
+  share   : SharePackage
+) : CommitPackage {
+  const idx    = share.idx
+  return get_record(commits, idx)
 }

@@ -6,7 +6,7 @@ import {
   combine_partial_sigs,
   create_commit_pkg,
   create_share_group,
-  get_membership,
+  get_commit_pkg,
   get_session_ctx,
   sign_msg,
   verify_final_sig,
@@ -40,8 +40,9 @@ const ctx     = get_session_ctx(group.pubkey, commits, message)
 const idx     = ctx.indexes.map(i => Number(i))
 // Create the partial signatures for a given signing context.
 const psigs = idx.map(i => {
-  const mbr = get_membership(commits, shares, i)
-  return sign_msg(ctx, mbr.share, mbr.commit)
+  const share  = shares[i]
+  const commit = get_commit_pkg(commits, share)
+  return sign_msg(ctx, share, commit)
 })
 // Aggregate the partial signatures into a single signature.
 const signature = combine_partial_sigs(ctx, psigs)
@@ -61,12 +62,12 @@ console.log(JSON.stringify({
     "secrets"      : secrets,
     "sig"          : signature
   },
-  "members" : ctx.indexes.map(i => {
-    const idx    = Number(i)
-    const mbr    = get_membership(commits, shares, idx)
-    const psig   = get_record(psigs, idx).psig
-    const binder = get_record(ctx.bind_factors, idx).bind_hash
-    return { ...mbr.commit, ...mbr.share, nseed_h, nseed_b, binder, psig }
+  "members" : idx.map(i => {
+    const share  = shares[i]
+    const commit = get_commit_pkg(commits, share)
+    const psig   = get_record(psigs, i).psig
+    const binder = get_record(ctx.bind_factors, i).bind_hash
+    return { ...commit, ...share, nseed_h, nseed_b, binder, psig }
   })
 }, null, 2))
 

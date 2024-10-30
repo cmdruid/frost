@@ -53,10 +53,9 @@ export function get_challenge (
 
 export function get_membership (
   commits : CommitPackage[],
-  shares  : SharePackage[],
-  idx     : number
+  share   : SharePackage
 ) : MemberPackage {
-  const share  = get_record(shares, idx)
+  const idx    = share.idx
   const commit = get_record(commits, idx)
   return { idx, commit, share }
 }

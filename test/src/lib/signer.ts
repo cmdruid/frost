@@ -4,7 +4,7 @@ import {
   combine_partial_sigs,
   create_commit_pkg,
   create_share_group,
-  get_membership,
+  get_commit_pkg,
   get_session_ctx,
   sign_msg,
   verify_final_sig,
@@ -46,9 +46,10 @@ export function frost_sign (
   const idx = ctx.indexes.map(i => Number(i))
   // Create the partial signatures for a given signing context.
   const psigs = idx.map(i => {
-    const mbr = get_membership(commits, shares, i)
-    const sig = sign_msg(ctx, mbr.share, mbr.commit)
-    if (!verify_partial_sig(ctx, mbr.commit, sig.pubkey, sig.psig)) {
+    const share  = shares[i]
+    const commit = get_commit_pkg(commits, share)
+    const sig    = sign_msg(ctx, share, commit)
+    if (!verify_partial_sig(ctx, commit, sig.pubkey, sig.psig)) {
       console.log(`psig ${idx}:, ${sig.psig}`)
       throw new Error('sig share failed validation')
     }

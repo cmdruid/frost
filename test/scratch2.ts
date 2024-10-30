@@ -1,10 +1,10 @@
-import { get_record, random_bytes } from '@cmdcode/frost/util'
+import { random_bytes } from '@cmdcode/frost/util'
 
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_share_pkg,
-  get_pubkey,
+  create_share_group,
+  get_commit_pkg,
   get_session_ctx,
   sign_msg,
   verify_final_sig,
@@ -14,39 +14,36 @@ import {
 const seckey  = random_bytes(32).hex
 const message = random_bytes(32).hex
 
-const secrets  = [ seckey ]
-const share_ct = 3
-const thold    = 2
+const secrets   = [ seckey ]
+const threshold = 2
+const share_max = 3
 
-// Generate a secret, package of shares, and group key.
-const { group_pubkey, shares: sec_shares } = create_share_pkg(secrets, thold, share_ct)
+// Generate a group of secret shares.
+const group = create_share_group(secrets, threshold, share_max)
 
-// Use a t amount of shares to create nonce commitments.
-const commits = sec_shares.slice(0, thold).map(e => create_commit_pkg(e))
+// Select a threshold (t) amount of shares and create nonce commitments.
+const shares  = group.shares.slice(0, threshold)
+const commits = shares.map(e => create_commit_pkg(e))
 
-// Collect the commitments into an array.
-const sec_nonces = commits.map(mbr => mbr.secnonce)
-const pub_nonces = commits.map(mbr => mbr.pubnonce)
+// Compute the context data for the signing session.
+const ctx = get_session_ctx(group.pubkey, commits, message)
 
-// Compute some context data for the signing session.
-const context = get_session_ctx(group_pubkey, pub_nonces, message)
+// Convert the context indices into iterable numbers.
+const idx = ctx.indexes.map(i => Number(i))
 
-// Create the partial signatures for a given signing context.
-const psigs = context.identifiers.map(i => {
-  const idx = Number(i)
-  const sec_share = get_record(sec_shares, idx)
-  const sec_nonce = get_record(sec_nonces, idx)
-  const pub_nonce = get_record(pub_nonces, idx)
-  const sig_share = sign_msg(context, sec_share, sec_nonce)
-  const share_pk  = get_pubkey(sec_share.seckey)
-  if (!verify_partial_sig(context, pub_nonce, share_pk, sig_share.psig)) {
+// Collect a partial signature from each share.
+const psigs = idx.map(i => {
+  const share  = shares[i]
+  const commit = get_commit_pkg(commits, share)
+  const sig    = sign_msg(ctx, share, commit)
+  if (!verify_partial_sig(ctx, commit, sig.pubkey, sig.psig)) {
     throw new Error('sig share failed validation')
   }
-  return sig_share
+  return sig
 })
 
 // Aggregate the partial signatures into a single signature.
-const signature = combine_partial_sigs(context, psigs)
-const is_valid  = verify_final_sig(context, message, signature)
+const signature = combine_partial_sigs(ctx, psigs)
+const is_valid  = verify_final_sig(ctx, message, signature)
 
 console.log('is valid:', is_valid)

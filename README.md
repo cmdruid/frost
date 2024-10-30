@@ -9,15 +9,20 @@ The FROST protocol specifies two rounds for producing a threshold signature.
 **Initial setup of parameters (using a trusted dealer):**
 
 ```ts
-import { create_share_pkg } from '@cmdcode/frost/lib'
+import { create_share_group } from '@cmdcode/frost/lib'
+import { random_bytes }       from '@cmdcode/frost/util'
 
-const secrets     = [ 'optional_secret_key' ]
-const message     = new TextEncoder().encode('hello world!')
-const threshold   = 11
-const share_count = 15
+// Generate a random secret key and message.
+const seckey  = random_bytes(32).hex
+const message = random_bytes(32).hex
 
-// Generate a secret, package of shares, and group key.
-const { group_pubkey, shares } = create_share_pkg(secrets, thold, share_ct)
+// Configure the paramaters of the group.
+const secrets   = [ seckey ]
+const threshold = 2
+const share_max = 3
+
+// Generate a group of secret shares.
+const group = create_share_group(secrets, threshold, share_max)
 ```
 
 **Round 1 Example (nonce commitments):**
@@ -25,38 +30,49 @@ const { group_pubkey, shares } = create_share_pkg(secrets, thold, share_ct)
 ```ts
 import { create_commit_pkg } from '@cmdcode/frost/lib'
 
-// Use a t amount of shares to create nonce commitments.
-const commits = shares.slice(0, thold).map(share => {
-  return create_commit_pkg(share)
-})
+// Select a threshold (t) amount of shares and create nonce commitments.
+const shares  = group.shares.slice(0, threshold)
+const commits = shares.map(e => create_commit_pkg(e))
 ```
 
 **Round 2 Example (signing with secret shares):**
 
 ```ts
-import { get_context, sign } from '@cmdcode/frost/lib'
+import {
+  get_commit_pkg,
+  get_session_context,
+  sign_msg,
+  verify_partial_sig
+} from '@cmdcode/frost/lib'
 
-// Compute some context data for the signing session.
-const context = get_session_context (
-  commits, group_pubkey, message
-)
-// Create the partial signatures for a given signing context.
-const psigs = members.map((_, i) => {
-  return sign_msg(context, pkg.shares[i], commits[i])
+// Compute the context data for the signing session.
+const ctx = get_session_ctx(group.pubkey, commits, message)
+
+// Convert the context indices into iterable numbers.
+const idx = ctx.indexes.map(i => Number(i))
+
+// Collect a partial signature from each share.
+const psigs = idx.map(i => {
+  const share  = shares[i]
+  const commit = get_commit_pkg(commits, share)
+  const sig    = sign_msg(ctx, share, commit)
+  if (!verify_partial_sig(ctx, commit, sig.pubkey, sig.psig)) {
+    throw new Error('sig share failed validation')
+  }
+  return sig
 })
 ```
 
-Once a threshold (t) number of shares have been collected, you can aggregate them into a single signature:
+Once a threshold (t) number of partial signatures have been collected, you can aggregate them into a full signature:
 
 ```ts
 import { combine_partial_sigs, verify_final_sig } from '@cmdcode/frost/lib'
 
 // Aggregate the partial signatures into a single signature.
-const signature = combine_partial_sigs (
-  commits, message, pkg.group_pubkey, psigs
-)
-// Check that the signature is valid
-const is_valid = verify_final_sig(context, signature)
+const signature = combine_partial_sigs(ctx, psigs)
+
+// Check that the signature is valid.
+const is_valid  = verify_final_sig(ctx, message, signature)
 
 console.log('is valid:', is_valid)
 ```
