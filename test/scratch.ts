@@ -1,52 +1,93 @@
-import { get_record, random_bytes } from '@cmdcode/frost/util'
+import { random_bytes } from '@cmdcode/frost/util'
 
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_share_pkg,
+  create_share_group,
+  get_membership,
   get_pubkey,
   get_session_ctx,
+  refresh_share_group,
   sign_msg,
   verify_final_sig,
-  verify_partial_sig
+  verify_partial_sig,
+  verify_share
 } from '@cmdcode/frost/lib'
 
 const seckey  = random_bytes(32).hex
 const message = random_bytes(32).hex
+const pubkey  = get_pubkey(seckey)
 
-const secrets  = [ seckey ]
+console.log('master pk:', pubkey)
+
+const init_secrets = [ seckey ]
+
 const share_ct = 3
 const thold    = 2
 
 // Generate a secret, package of shares, and group key.
-const { group_pubkey, sec_shares } = create_share_pkg(secrets, thold, share_ct)
+const a_group = create_share_group(init_secrets, thold, share_ct)
+
+console.log('a_group pk:', a_group.pubkey)
 
 // Use a t amount of shares to create nonce commitments.
-const commits = sec_shares.slice(0, thold).map(e => create_commit_pkg(e))
-
-// Collect the commitments into an array.
-const sec_nonces = commits.map(mbr => mbr.secnonce)
-const pub_nonces = commits.map(mbr => mbr.pubnonce)
+const a_shares  = a_group.shares.slice(0, thold)
+const a_commits = a_shares.map(e => create_commit_pkg(e))
 
 // Compute some context data for the signing session.
-const context = get_session_ctx(group_pubkey, pub_nonces, message)
+const a_ctx = get_session_ctx(a_group.pubkey, a_commits, message)
+const a_idx = a_ctx.indexes.map(e => Number(e))
 
 // Create the partial signatures for a given signing context.
-const psigs = context.identifiers.map(i => {
-  const idx = Number(i)
-  const sec_share = get_record(sec_shares, idx)
-  const sec_nonce = get_record(sec_nonces, idx)
-  const pub_nonce = get_record(pub_nonces, idx)
-  const sig_share = sign_msg(context, sec_share, sec_nonce)
-  const share_pk  = get_pubkey(sec_share.seckey)
-  if (!verify_partial_sig(context, pub_nonce, share_pk, sig_share.psig)) {
+const a_psigs = a_idx.map(i => {
+  const mbr = get_membership(a_commits, a_shares, i)
+  const sig = sign_msg(a_ctx, mbr.share, mbr.commit)
+  if (!verify_partial_sig(a_ctx, mbr.commit, sig.pubkey, sig.psig)) {
     throw new Error('sig share failed validation')
   }
-  return sig_share
+  return sig
 })
 
 // Aggregate the partial signatures into a single signature.
-const signature = combine_partial_sigs(context, psigs)
-const is_valid  = verify_final_sig(context, message, signature)
+const a_signature = combine_partial_sigs(a_ctx, a_psigs)
+const a_is_valid  = verify_final_sig(a_ctx, message, a_signature)
 
-console.log('is valid:', is_valid)
+console.log('Group A is valid:', a_is_valid)
+console.log('group A shares:', a_group.shares)
+
+// Update shares.
+const c_group = refresh_share_group(a_group)
+
+console.log('c_group pk:', c_group.pubkey)
+
+// Verify that all shares are included in the group key.
+c_group.shares.every(e => {
+  if (!verify_share(c_group.commits, e, thold)) {
+    throw new Error('invalid share in the group at index: ' + e.idx)
+  }
+})
+
+// Use a t amount of shares to create nonce commitments.
+const c_shares  = c_group.shares.slice(0, thold)
+const c_commits = c_shares.map(e => create_commit_pkg(e))
+
+// Compute some context data for the signing session.
+const c_ctx = get_session_ctx(c_group.pubkey, c_commits, message)
+const c_idx = c_ctx.indexes.map(e => Number(e))
+
+// Create the partial signatures for a given signing context.
+const c_psigs = c_idx.map(i => {
+  const mbr = get_membership(c_commits, c_shares, i)
+  const sig = sign_msg(c_ctx, mbr.share, mbr.commit)
+  if (!verify_partial_sig(c_ctx, mbr.commit, sig.pubkey, sig.psig)) {
+    throw new Error('sig share failed validation')
+  }
+  return sig
+})
+
+// Aggregate the partial signatures into a single signature.
+const c_signature = combine_partial_sigs(c_ctx, c_psigs)
+const c_is_valid  = verify_final_sig(c_ctx, message, c_signature)
+
+console.log('Group C is valid:', c_is_valid)
+console.log('group C shares:', c_group.shares)

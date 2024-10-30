@@ -26,7 +26,7 @@ export default function (tape : Test, vector : SpecVector) {
 
     for (const mbr of vector.members) {
       const binder = get_record(binders, mbr.idx)
-      t.equal(binder.key, mbr.binder, `[${mbr.idx}] binder factor should match vector`)
+      t.equal(binder.bind_hash, mbr.binder, `[${mbr.idx}] binder factor should match vector`)
     }
 
     const group_nonce = get_group_nonce(pnonces, binders)

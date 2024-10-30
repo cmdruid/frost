@@ -15,70 +15,67 @@ import type {
   GroupCommitContext,
   GroupKeyContext,
   GroupSessionCtx,
-  PublicNonce
+  PublicNoncePackage
 } from '@/types/index.js'
 
 /**
  * Get the initial context of the group key, plus any tweaks.
  */
 export function get_key_context (
-  group_pk : Bytes,
-  tweaks  ?: Bytes[]
+  pubkey  : Bytes,
+  tweaks? : Bytes[]
 ) : GroupKeyContext {
   // Initialize internal pubkey as group pubkey.
-  const int_pubkey   = Buff.bytes(group_pk).hex
+  const int_pk   = Buff.bytes(pubkey).hex
   // Get initial state of pubkey as internal state.
-  const int_state    = get_point_state(lift_x(group_pk))
+  const int_pt   = get_point_state(lift_x(pubkey))
   // Calculate the group state (with any additional tweaks).
-  const group_state  = get_point_state(int_state.point, tweaks)
+  const group_pt = get_point_state(int_pt.point, tweaks)
   // Set the group pubkey based on the group point (after tweaks).
-  const group_pubkey = group_state.point.toHex(true)
+  const group_pk = group_pt.point.toHex(true)
   // Return both keys and states.
-  return { int_pubkey, int_state, group_pubkey, group_state }
+  return { int_pk, int_pt, group_pk, group_pt }
 }
 
 /**
  * Get the remaining context of the signing session.
  */
 export function get_commit_context (
-  context    : GroupKeyContext,
-  pub_nonces : PublicNonce[],
-  message    : Bytes,
+  key_ctx : GroupKeyContext,
+  pnonces : PublicNoncePackage[],
+  message : string,
 ) : GroupCommitContext {
   // Set the group pubkey from the key context.
-  const group_pubkey = context.group_pubkey
+  const group_pubkey = key_ctx.group_pk
   // Calculate the prefix for making the binding commitments.
-  const bind_prefix  = get_commit_prefix(pub_nonces, group_pubkey, message).hex
+  const bind_prefix  = get_commit_prefix(pnonces, group_pubkey, message).hex
   // Compute the binding values for each nonce.
-  const bind_factors = get_commit_binders(pub_nonces, bind_prefix)
+  const bind_factors = get_commit_binders(pnonces, bind_prefix)
   // Compute the group nonce value.
-  const group_pnonce = get_group_nonce(pub_nonces, bind_factors)
+  const group_pn     = get_group_nonce(pnonces, bind_factors)
   // Compile a list of identifiers from the nonces.
-  const identifiers  = get_nonce_ids(pub_nonces)
+  const indexes      = get_nonce_ids(pnonces)
   // Compute the challenge hash for the signing session.
-  const challenge    = get_challenge(group_pnonce, group_pubkey, message)
+  const challenge    = get_challenge(group_pn, group_pubkey, message)
   // Format the message to be signed as a hex string.
   message = Buff.bytes(message).hex
   // Return the context object.
-  return {
-    bind_prefix, bind_factors, challenge,
-    pub_nonces, group_pnonce, identifiers, message
-  }
+  return { bind_prefix, bind_factors, challenge, pnonces, group_pn, indexes, message }
 }
 
 /**
  * Get the full context of the signing session.
  */
 export function get_session_ctx (
-  group_pk   : Bytes,
-  pub_nonces : PublicNonce[],
-  message    : Bytes,
-  tweaks    ?: Bytes[]
+  group_pk : Bytes,
+  pnonces  : PublicNoncePackage[],
+  message  : string,
+  tweaks?  : string[]
 ) : GroupSessionCtx {
   // Get the key context for the session.
   const key_ctx = get_key_context(group_pk, tweaks)
   // Get the remaining context for the session.
-  const com_ctx = get_commit_context(key_ctx, pub_nonces, message)
+  const com_ctx = get_commit_context(key_ctx, pnonces, message)
   // Return the full context object.
   return { ...key_ctx, ...com_ctx }
 }

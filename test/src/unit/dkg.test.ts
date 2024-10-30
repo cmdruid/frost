@@ -3,10 +3,10 @@ import { Buff }   from '@cmdcode/buff'
 import { assert } from '@cmdcode/frost/util'
 
 import {
-  create_share_pkg,
   derive_secret,
   verify_share,
-  combine_shares
+  combine_shares,
+  create_share_group
 } from '@cmdcode/frost/lib'
 
 const aliases = [ 'alice', 'bob', 'carol', 'david', 'edward', 'frank', 'gerome' ]
@@ -21,14 +21,14 @@ export default function (tape : Test) {
         // Use hash of alias to create the root secret.
         const secret = Buff.str(alias).digest
         // Create a share package for the user.
-        const shares = create_share_pkg([ secret ], 5, 7)
+        const group = create_share_group([ secret ], 5, 7)
         // Verify each share is included in the polynomial.
-        shares.sec_shares.forEach(s => {
-          const is_valid = verify_share(shares.vss_commits, s, 5)
+        group.shares.forEach(s => {
+          const is_valid = verify_share(group.commits, s, 5)
           assert.ok(is_valid, 'share failed validation')
         })
         // Return the share package for the user.
-        return shares
+        return group
       })
 
       t.pass('participant share packages are valid')
@@ -36,7 +36,7 @@ export default function (tape : Test) {
       // Compute the group shares from each user polynomial.
       let gshares = aliases.map((_, idx) => {
         // Collect a share from each package at the given index.
-        const shares = pkgs.map(pkg => pkg.sec_shares[idx])
+        const shares = pkgs.map(pkg => pkg.shares[idx])
         // Derive a group share and return.
         return combine_shares(shares)
       })

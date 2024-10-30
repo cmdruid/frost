@@ -5,7 +5,8 @@ import { get_record, random_bytes } from '@cmdcode/frost/util'
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_share_pkg,
+  create_share_group,
+  get_membership,
   get_session_ctx,
   sign_msg,
   verify_final_sig,
@@ -13,58 +14,59 @@ import {
 } from '@cmdcode/frost/lib'
 
 const secrets  = [ random_bytes(32), random_bytes(32) ]
-const message  = new TextEncoder().encode('hello world!')
+const message  = random_bytes(32).hex
 const thold    = 2
 const share_ct = 3
 const nseed_h = secrets[0].hex
 const nseed_b = secrets[1].hex
 
-// Generate a secret, package of shares, and group key.
-const { vss_commits, group_pubkey, sec_shares } = create_share_pkg(secrets, thold, share_ct)
-// 
-const is_valid_shares = sec_shares.every(e => verify_share(vss_commits, e, thold))
+// Generate a group of shares that represent a public key.
+const group = create_share_group(secrets, thold, share_ct)
+
+// Verify that all shares are included in the group key.
+const is_valid_shares = group.shares.every(e => {
+  if (!verify_share(group.commits, e, thold)) {
+    throw new Error('invalid share in the group at index: ' + e.idx)
+  }
+})
+
 // 
 if (!is_valid_shares) throw new Error('shares failed validation')
 // Use a t amount of shares to create nonce commitments.
-const members     = sec_shares.slice(0, thold)
-const commits     = members.map(e => create_commit_pkg(e, nseed_h, nseed_b))
-// Collect the commitments into an array.
-const sec_nonces  = commits.map(mbr => mbr.secnonce)
-const pub_nonces  = commits.map(mbr => mbr.pubnonce)
+const shares  = group.shares.slice(0, thold)
+const commits = shares.map(e => create_commit_pkg(e, nseed_h, nseed_b))
 // Compute some context data for the signing session.
-const context     = get_session_ctx(group_pubkey, pub_nonces, message)
+const ctx     = get_session_ctx(group.pubkey, commits, message)
+const idx     = ctx.indexes.map(i => Number(i))
 // Create the partial signatures for a given signing context.
-const psigs = context.identifiers.map(idx => {
-  const sec_share = get_record(sec_shares, Number(idx))
-  const sec_nonce = get_record(sec_nonces, Number(idx))
-  return sign_msg(context, sec_share, sec_nonce)
+const psigs = idx.map(i => {
+  const mbr = get_membership(commits, shares, i)
+  return sign_msg(ctx, mbr.share, mbr.commit)
 })
 // Aggregate the partial signatures into a single signature.
-const signature = combine_partial_sigs(context, psigs)
-const is_valid  = verify_final_sig(context, message, signature)
+const signature = combine_partial_sigs(ctx, psigs)
+const is_valid  = verify_final_sig(ctx, message, signature)
 
 console.log(JSON.stringify({
   "group": {
     "share_min"    : 2,
     "share_max"    : 3,
-    "identifiers"  : context.identifiers.map(e => Number(e)),
-    "challenge"    : Buff.big(context.challenge, 32).hex,
-    "commits"      : vss_commits,
+    "indexes"      : ctx.indexes.map(e => Number(e)),
+    "challenge"    : Buff.big(ctx.challenge, 32).hex,
+    "commits"      : group.commits,
     "message"      : Buff.bytes(message).hex,
-    "grp_pnonce"   : context.group_pnonce,
-    "grp_pubkey"   : context.group_pubkey,
-    "grp_prefix"   : context.bind_prefix,
+    "grp_pnonce"   : ctx.group_pn,
+    "grp_pubkey"   : ctx.group_pk,
+    "grp_prefix"   : ctx.bind_prefix,
     "secrets"      : secrets,
     "sig"          : signature
   },
-  "members" : context.identifiers.map(i => {
-    const idx = Number(i)
-    const { seckey }               = get_record(sec_shares, idx)
-    const { binder_sn, hidden_sn } = get_record(sec_nonces, idx)
-    const { binder_pn, hidden_pn } = get_record(pub_nonces, idx)
+  "members" : ctx.indexes.map(i => {
+    const idx    = Number(i)
+    const mbr    = get_membership(commits, shares, idx)
     const psig   = get_record(psigs, idx).psig
-    const binder = get_record(context.bind_factors, idx).key
-    return { idx, seckey, nseed_h, nseed_b, binder_sn, binder_pn, hidden_sn, hidden_pn, binder, psig }
+    const binder = get_record(ctx.bind_factors, idx).bind_hash
+    return { ...mbr.commit, ...mbr.share, nseed_h, nseed_b, binder, psig }
   })
 }, null, 2))
 

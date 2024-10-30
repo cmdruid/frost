@@ -1,12 +1,12 @@
 import { Test } from 'tape'
 
-import { get_record, random_bytes } from '@cmdcode/frost/util'
+import { random_bytes } from '@cmdcode/frost/util'
 
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_share_pkg,
-  get_pubkey,
+  create_share_group,
+  get_membership,
   get_session_ctx,
   sign_msg,
   verify_final_sig,
@@ -21,15 +21,15 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
     for (let i = 0; i < rounds; i++) {
 
       const secrets  = [ random_bytes(32), random_bytes(32) ]
-      const message  = new TextEncoder().encode('hello world!')
+      const message  = random_bytes(32).hex
       const share_ct = get_random_rng(3, max_shares)
       const thold    = get_random_rng(2, share_ct - 2)
-      const nseed_h = secrets[0].hex
-      const nseed_b = secrets[1].hex
+      const seed_h   = secrets[0].hex
+      const seed_b   = secrets[1].hex
 
       try {
         // Generate a secret, package of shares, and group key.
-        const { group_pubkey, sec_shares } = create_share_pkg(secrets, thold, share_ct)
+        const group = create_share_group(secrets, thold, share_ct)
 
         // This part is really slow.
 
@@ -41,32 +41,26 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
         // })
 
         // Use a t amount of shares to create nonce commitments.
-        const members = sec_shares.slice(0, thold).map(e => create_commit_pkg(e, nseed_h, nseed_b))
-
-        // Collect the commitments into an array.
-        const sec_nonces  = members.map(mbr => mbr.secnonce)
-        const pub_nonces  = members.map(mbr => mbr.pubnonce)
+        const shares  = group.shares.slice(0, thold)
+        const commits = shares.map(e => create_commit_pkg(e, seed_h, seed_b))
 
         // Compute some context data for the signing session.
-        const context = get_session_ctx(group_pubkey, pub_nonces, message)
-        
+        const ctx = get_session_ctx(group.pubkey, commits, message)
+        const idx = ctx.indexes.map(i => Number(i))
+
         // Create the partial signatures for a given signing context.
-        const psigs = context.identifiers.map(i => {
-          const idx = Number(i)
-          const sec_share = get_record(sec_shares, idx)
-          const sec_nonce = get_record(sec_nonces, idx)
-          const pub_nonce = get_record(pub_nonces, idx)
-          const sig_share = sign_msg(context, sec_share, sec_nonce)
-          const share_pk  = get_pubkey(sec_share.seckey)
-          if (!verify_partial_sig(context, pub_nonce, share_pk, sig_share.psig)) {
+        const psigs = idx.map(i => {
+          const mbr = get_membership(commits, shares, i)
+          const sig = sign_msg(ctx, mbr.share, mbr.commit)
+          if (!verify_partial_sig(ctx, mbr.commit, sig.pubkey, sig.psig)) {
             throw new Error('sig share failed validation')
           }
-          return sig_share
+          return sig
         })
 
         // Aggregate the partial signatures into a single signature.
-        const signature = combine_partial_sigs(context, psigs)
-        const is_valid  = verify_final_sig(context, message, signature)
+        const signature = combine_partial_sigs(ctx, psigs)
+        const is_valid  = verify_final_sig(ctx, message, signature)
 
         if (!is_valid) {
           throw new Error('final signature failed validation')

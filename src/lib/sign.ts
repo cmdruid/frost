@@ -14,52 +14,52 @@ import {
 } from './commit.js'
 
 import type {
-  PublicNonce,
-  SecretNonce,
-  SecretShare,
-  PartialSignature,
   GroupKeyContext,
-  GroupSessionCtx
+  GroupSessionCtx,
+  SharePackage,
+  SecretNoncePackage,
+  SignaturePackage,
+  PublicNoncePackage
 } from '@/types/index.js'
 
 /**
  * Sign a message using a secret share and secret nonce value.
  */
 export function sign_msg (
-  context  : GroupSessionCtx,
-  secshare : SecretShare,
-  secnonce : SecretNonce
-) : PartialSignature {
-  const { bind_factors, challenge, identifiers, group_state : Q } = context
+  ctx    : GroupSessionCtx,
+  share  : SharePackage,
+  snonce : SecretNoncePackage
+) : SignaturePackage {
+  const { bind_factors, challenge, indexes, group_pt : Q } = ctx
   
-  const bind_factor = get_bind_factor(bind_factors, secshare.idx)
-  const coefficient = interpolate_x(identifiers, BigInt(secshare.idx))
+  const bind_factor = get_bind_factor(bind_factors, share.idx)
+  const coefficient = interpolate_x(indexes, BigInt(share.idx))
 
-  if (secnonce.idx !== secshare.idx) {
-    throw new Error('secshare index does not match nonce index')
+  if (snonce.idx !== share.idx) {
+    throw new Error(`commit index does not match share index: ${snonce.idx} !== ${share.idx}`)
   }
 
   // Compute the signature share
-  let snonce_h  = Buff.bytes(secnonce.hidden_sn).big
-  let snonce_b  = Buff.bytes(secnonce.binder_sn).big
-  let seckey    = Buff.bytes(secshare.seckey).big
+  let snonce_h  = Buff.bytes(snonce.hidden_sn).big
+  let snonce_b  = Buff.bytes(snonce.binder_sn).big
+  let seckey    = Buff.bytes(share.seckey).big
 
-  const GR_elem = lift_x(context.group_pnonce)
+  const GR_elem = lift_x(ctx.group_pn)
 
   if (!GR_elem.hasEvenY()) {
     snonce_h = curve.n - snonce_h
     snonce_b = curve.n - snonce_b
   }
 
-  let cnonce = mod_n(snonce_h + (snonce_b * bind_factor))
+  let snonce_hbf = mod_n(snonce_h + (snonce_b * bind_factor))
 
   const sk  = mod_n(Q.parity * Q.state * seckey)
-  const sig = mod_n(cnonce + coefficient * sk * challenge)
+  const sig = mod_n(snonce_hbf + coefficient * sk * challenge)
 
   return {
-    idx    : secshare.idx,
-    pubkey : get_pubkey(secshare.seckey),
-    psig   : Buff.big(sig, 32).hex
+    idx    : share.idx,
+    psig   : Buff.big(sig, 32).hex,
+    pubkey : get_pubkey(share.seckey)
   }
 }
 
@@ -68,18 +68,18 @@ export function sign_msg (
  */
 export function combine_partial_sigs (
   context : GroupSessionCtx,
-  psigs   : PartialSignature[]
+  psigs   : SignaturePackage[]
 ) {
   //
-  const { challenge, pub_nonces, group_state, group_pubkey, message } = context
+  const { challenge, pnonces, group_pt, group_pk, message } = context
   //
-  const { parity, tweak } = group_state
+  const { parity, tweak } = group_pt
   //
-  const commit_prefix = get_commit_prefix(pub_nonces, group_pubkey, message)
+  const commit_prefix = get_commit_prefix(pnonces, group_pk, message)
   // Compute the binding factors
-  const group_binders = get_commit_binders(pub_nonces, commit_prefix)
+  const group_binders = get_commit_binders(pnonces, commit_prefix)
   // Compute the group commitment
-  const group_pnonce  = get_group_nonce(pub_nonces, group_binders)
+  const group_pnonce  = get_group_nonce(pnonces, group_binders)
   // Compute aggregated signature
   const s = psigs
     .map(e => Buff.hex(e.psig).big)
@@ -95,20 +95,20 @@ export function combine_partial_sigs (
  * Verify a signature share is valid.
  */
 export function verify_partial_sig (
-  context   : GroupSessionCtx,
-  pub_nonce : PublicNonce,
-  share_pk  : Bytes,
-  share_sig : Bytes,
+  ctx        : GroupSessionCtx,
+  pnonce     : PublicNoncePackage,
+  share_pk   : string,
+  share_psig : string,
 ) {
   //
-  const { bind_factors, challenge, identifiers, group_pubkey, group_pnonce } = context
+  const { bind_factors, challenge, indexes, group_pk, group_pn } = ctx
   //
-  const P_elem = lift_x(group_pubkey)
-  const R_elem = lift_x(group_pnonce)
-  const binder = get_bind_factor(bind_factors, pub_nonce.idx)
+  const P_elem = lift_x(group_pk)
+  const R_elem = lift_x(group_pn)
+  const binder = get_bind_factor(bind_factors, pnonce.idx)
 
-  let hidden_elem = lift_x(pub_nonce.hidden_pn)
-  let binder_elem = lift_x(pub_nonce.binder_pn)
+  let hidden_elem = lift_x(pnonce.hidden_pn)
+  let binder_elem = lift_x(pnonce.binder_pn)
   let public_elem = lift_x(share_pk)
 
   if (!P_elem.hasEvenY()) {
@@ -122,10 +122,10 @@ export function verify_partial_sig (
 
   const commit_elem = G.ScalarMulti(binder_elem, binder)
   const nonce_elem  = G.ElementAdd(hidden_elem, commit_elem)
-  const lambda_i    = interpolate_x(identifiers, BigInt(pub_nonce.idx))
+  const lambda_i    = interpolate_x(indexes, BigInt(pnonce.idx))
 
   const chal = mod_n(challenge * lambda_i)
-  const sig  = Buff.bytes(share_sig).big
+  const sig  = Buff.hex(share_psig).big
   const sG   = G.ScalarBaseMulti(sig)
   const pki  = G.ScalarMulti(public_elem, chal)
   const R    = G.ElementAdd(nonce_elem, pki)
@@ -142,5 +142,5 @@ export function verify_final_sig (
 ) {
   const sig = Buff.bytes(signature)
   const msg = Buff.bytes(message)
-  return schnorr.verify(sig, msg, context.group_pubkey.slice(2))
+  return schnorr.verify(sig, msg, context.group_pk.slice(2))
 }

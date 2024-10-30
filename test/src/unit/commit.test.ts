@@ -9,14 +9,12 @@ export default function (tape : Test, vector : SpecVector) {
     for (const mbr of vector.members) {
       const { idx, seckey, nseed_h, nseed_b } = mbr
 
-      const pkg = create_commit_pkg({ idx, seckey }, nseed_h, nseed_b)
+      const commit = create_commit_pkg({ idx, seckey }, nseed_h, nseed_b)
 
-      const { secnonce, pubnonce } = pkg
-      
-      t.equal(secnonce.hidden_sn, mbr.snonce_h, `[${idx}] hidden nonce should match vector`)
-      t.equal(secnonce.binder_sn, mbr.snonce_b, `[${idx}] binder nonce should match vector`)
-      t.equal(pubnonce.hidden_pn, mbr.pnonce_h, `[${idx}] hidden commit should match vector`)
-      t.equal(pubnonce.binder_pn, mbr.pnonce_b, `[${idx}] binder commit should match vector`)
+      t.equal(commit.hidden_sn, mbr.snonce_h, `[${idx}] hidden nonce should match vector`)
+      t.equal(commit.binder_sn, mbr.snonce_b, `[${idx}] binder nonce should match vector`)
+      t.equal(commit.hidden_pn, mbr.pnonce_h, `[${idx}] hidden commit should match vector`)
+      t.equal(commit.binder_pn, mbr.pnonce_b, `[${idx}] binder commit should match vector`)
     }
 
     t.end()

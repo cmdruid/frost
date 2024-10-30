@@ -11,24 +11,24 @@ import {
 } from './util.js'
 
 import type {
-  BindFactor,
   CurveElement,
-  NoncePackage,
-  PublicNonce,
-  SecretShare
+  CommitPackage,
+  PublicNoncePackage,
+  BinderPackage,
+  SharePackage
 } from '@/types/index.js'
 
 /**
  * Constructs a byte-prefix for the signing session.
  */
 export function get_commit_prefix (
-  nonces   : PublicNonce[],
-  group_pk : Bytes,
-  message  : Bytes
+  pnonces  : PublicNoncePackage[],
+  group_pk : string,
+  message  : string
 ) : Buff {
-  const msg_bytes   = Buff.bytes(message)
+  const msg_bytes   = Buff.hex(message)
   const msg_hash    = H.H4(msg_bytes)
-  const commit_list = get_group_commit(nonces)
+  const commit_list = get_group_commit(pnonces)
   const commit_hash = H.H5(commit_list)
   return Buff.join([ group_pk, msg_hash, commit_hash ])
 }
@@ -37,13 +37,13 @@ export function get_commit_prefix (
  * Computes the binding values for each public nonce.
  */
 export function get_commit_binders (
-  nonces : PublicNonce[],
+  nonces : PublicNoncePackage[],
   prefix : Bytes
-) : BindFactor[] {
+) : BinderPackage[] {
   return nonces.map(({ idx }) => {
     const scalar    = G.SerializeScalar(idx)
     const rho_input = Buff.join([ prefix, scalar ])
-    return { idx, key: H.H1(rho_input).hex }
+    return { idx, bind_hash: H.H1(rho_input).hex }
   })
 }
 
@@ -51,12 +51,12 @@ export function get_commit_binders (
  * Computes the group public nonce for the signing session.
  */
 export function get_group_nonce (
-  nonces  : PublicNonce[],
-  binders : BindFactor[]
+  pnonces : PublicNoncePackage[],
+  binders : BinderPackage[]
 ) : string {
   let group_commit : CurveElement | null = null
 
-  for (const { idx, binder_pn, hidden_pn } of nonces) {
+  for (const { idx, binder_pn, hidden_pn } of pnonces) {
     const hidden_elem   = G.DeserializeElement(hidden_pn)
     const binding_elem  = G.DeserializeElement(binder_pn)
     const bind_factor   = get_bind_factor(binders, idx)
@@ -72,16 +72,14 @@ export function get_group_nonce (
  * Creates a commitment package for a FROST signing session.
  */
 export function create_commit_pkg (
-  secret_share : SecretShare,
-  hidden_seed ?: Bytes,
-  binder_seed ?: Bytes
-) : NoncePackage {
+  secret_share : SharePackage,
+  hidden_seed ?: string,
+  binder_seed ?: string
+) : CommitPackage {
   const { idx, seckey } = secret_share
   const binder_sn = generate_nonce(seckey, binder_seed).hex
   const hidden_sn = generate_nonce(seckey, hidden_seed).hex
   const binder_pn = get_pubkey(binder_sn)
   const hidden_pn = get_pubkey(hidden_sn)
-  const secnonce  = { idx, binder_sn, hidden_sn }
-  const pubnonce  = { idx, binder_pn, hidden_pn }
-  return { idx, pubnonce, secnonce }
+  return { idx, binder_pn, binder_sn, hidden_pn, hidden_sn }
 }

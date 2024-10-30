@@ -1,22 +1,13 @@
+import { Package } from './util.js'
+
+export type SharePackage = Package<SecretShare>
+
 export interface SecretShare {
-  idx    : number,
   seckey : string
 }
 
-export interface PublicShare {
-  idx    : number,
-  pubkey : string
-}
-
-export interface SharePackage {
-  sec_shares   : SecretShare[],
-  vss_commits  : string[],
-  group_pubkey : string
-}
-
-
-export interface PartialSignature {
-  idx    : number,
-  pubkey : string,
-  psig   : string
+export interface ShareGroup {
+  commits : string[],
+  pubkey  : string
+  shares  : SharePackage[],
 }

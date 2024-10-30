@@ -1,10 +1,10 @@
-import { get_record, random_bytes } from '@cmdcode/frost/util'
+import { random_bytes } from '@cmdcode/frost/util'
 
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_share_pkg,
-  get_pubkey,
+  create_share_group,
+  get_membership,
   get_session_ctx,
   sign_msg,
   verify_final_sig,
@@ -12,7 +12,7 @@ import {
   verify_share
 } from '@cmdcode/frost/lib'
 
-import type { SharePackage } from '@/types/index.js'
+import type { ShareGroup } from '@/types/index.js'
 
 export function frost_keygen (
   threshold  : number = 11,
@@ -21,54 +21,43 @@ export function frost_keygen (
   //
   const secrets = [ random_bytes(32) ]
   // Generate a secret, package of shares, and group key.
-  const pkg = create_share_pkg(secrets, threshold, max_shares)
+  const group = create_share_group(secrets, threshold, max_shares)
   //
-  pkg.sec_shares.forEach(e => {
-    if (!verify_share(pkg.vss_commits, e, threshold)) {
+  group.shares.forEach(e => {
+    if (!verify_share(group.commits, e, threshold)) {
       throw new Error(`share ${e.idx} failed validation:, ${e.seckey}`)
     }
   })
   //
-  return pkg
+  return group
 }
 
 export function frost_sign (
-  pkg        : SharePackage,
-  message    : string,
-  tweaks     : string[] = [],
-  threshold  : number   = 11,
+  group   : ShareGroup,
+  message : string,
+  tweaks  : string[] = [],
 ) {
-  //
-  const { group_pubkey, sec_shares } = pkg
   // Use a t amount of shares to create nonce commitments.
-  const members = sec_shares.slice(0, threshold).map(e => {
-    return create_commit_pkg(e)
-  })
-  // Collect the commitments into an array.
-  const sec_nonces  = members.map(mbr => mbr.secnonce)
-  const pub_nonces  = members.map(mbr => mbr.pubnonce)
+  const threshold = group.commits.length
+  const shares    = group.shares.slice(0, threshold)
+  const commits   = shares.map(e => create_commit_pkg(e))
   // Compute some context data for the signing session.
-  const context     = get_session_ctx(group_pubkey, pub_nonces, message, tweaks)
+  const ctx = get_session_ctx(group.pubkey, commits, message, tweaks)
+  const idx = ctx.indexes.map(i => Number(i))
   // Create the partial signatures for a given signing context.
-  const psigs = context.identifiers.map(i => {
-    const idx = Number(i)
-    const sec_share = get_record(sec_shares, idx)
-    const sec_nonce = get_record(sec_nonces, idx)
-    const pub_nonce = get_record(pub_nonces, idx)
-    const sig_share = sign_msg(context, sec_share, sec_nonce)
-    const share_pk  = get_pubkey(sec_share.seckey)
-
-    if (!verify_partial_sig(context, pub_nonce, share_pk, sig_share.psig)) {
-      console.log(`psig ${idx}:, ${sig_share.psig}`)
+  const psigs = idx.map(i => {
+    const mbr = get_membership(commits, shares, i)
+    const sig = sign_msg(ctx, mbr.share, mbr.commit)
+    if (!verify_partial_sig(ctx, mbr.commit, sig.pubkey, sig.psig)) {
+      console.log(`psig ${idx}:, ${sig.psig}`)
       throw new Error('sig share failed validation')
     }
-
-    return sig_share
+    return sig
   })
 
   // Aggregate the partial signatures into a single signature.
-  const signature = combine_partial_sigs(context, psigs)
-  const is_valid  = verify_final_sig(context, message, signature)
+  const signature = combine_partial_sigs(ctx, psigs)
+  const is_valid  = verify_final_sig(ctx, message, signature)
 
   if (!is_valid) {
     throw new Error('final signature failed validation')

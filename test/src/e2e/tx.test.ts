@@ -21,10 +21,10 @@ export default async function (t : Test) {
   const client = await core.startup()
 
   t.test('Testing transaction signing', async t => {
-    const pkg = frost_keygen()
+    const group = frost_keygen()
 
     try {
-      const pubkey = pkg.group_pubkey.slice(2)
+      const pubkey = group.pubkey.slice(2)
       // Specify a basic script to use for testing.
       const script = [ pubkey, 'OP_CHECKSIG' ]
       const sbytes = Script.encode(script)
@@ -65,7 +65,7 @@ export default async function (t : Test) {
       // Create the transaction hash.
       const sighash   = Signer.taproot.hash(spend_template, 0, { extension: tapleaf })
       // Sign the hash using the frost quorum.
-      const signature = frost_sign(pkg, sighash)
+      const signature = frost_sign(group, sighash)
       // Add the signature to the witness.
       spend_template.vin[0].witness = [ signature, script, cblock ]
       // Publish the transaction.

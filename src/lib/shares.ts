@@ -1,8 +1,8 @@
 import { Buff, Bytes } from '@cmdcode/buff'
 import { G }           from '@/ecc/index.js'
 import { _0n, _1n }    from '@/const.js'
-import { assert, get_record }      from '@/util/index.js'
 
+import { assert, get_record }   from '@/util/index.js'
 import { mod_n, pow_n, lift_x } from '@/ecc/util.js'
 
 import {
@@ -10,7 +10,7 @@ import {
   evaluate_x
 } from './poly.js'
 
-import type { SecretShare } from '@/types/index.js'
+import type { SharePackage } from '@/types/index.js'
 
 /**
  * Creates a list of secret shares for a given polynomial.
@@ -18,7 +18,7 @@ import type { SecretShare } from '@/types/index.js'
 export function create_shares (
   coeffs : bigint[],
   count  : number
-) : SecretShare[] {
+) : SharePackage[] {
   // Init our share list.
   const shares  = []
   // For each share to generate (skipping the root):
@@ -35,8 +35,8 @@ export function create_shares (
 }
 
 export function combine_shares (
-  shares : SecretShare[]
-) : SecretShare {
+  shares : SharePackage[]
+) : SharePackage {
   // Check that each share has the same idx.
   assert.is_equal_set(shares.map(e => e.idx))
   // Get the index value of the first share.
@@ -55,7 +55,7 @@ export function combine_shares (
  * Interpolate secret shares and derive the root secret.
  */
 export function derive_secret (
-  shares : SecretShare[]
+  shares : SharePackage[]
 ) : string {
   // Convert each share into coordinates.
   const coords = shares.map(share => [
@@ -69,20 +69,21 @@ export function derive_secret (
 }
 
 /**
- * Updates a list of secret shares for a given polynomial.
+ * Merge a list of secret shares for a given polynomial.
  */
-export function update_shares (
-  curr_shares : SecretShare[],
-  aux_shares  : SecretShare[]
-) : SecretShare[] {
+export function merge_shares (
+  shares_a : SharePackage[],
+  shares_b : SharePackage[]
+) : SharePackage[] {
+  assert.equal_arr_size(shares_a, shares_b)
   // Init our share list.
   const shares = []
   // For each share to generate (skipping the root):
-  for (let i = 0; i <= curr_shares.length; i++) {
-    const curr_share = curr_shares[i]
-    const aux_share  = get_record(aux_shares, curr_share.idx)
-    const new_share  = combine_shares([ curr_share, aux_share ])
-    shares.push(new_share)
+  for (let i = 0; i < shares_a.length; i++) {
+    const curr_share = shares_a[i]
+    const aux_share  = get_record(shares_b, curr_share.idx)
+    const agg_share  = combine_shares([ curr_share, aux_share ])
+    shares.push(agg_share)
   }
   // Return the list of shares.
   return shares
@@ -91,7 +92,9 @@ export function update_shares (
 /**
  * Create a list of public key commitments, one for each coefficient.
  */
-export function get_coeff_commits (coeffs : Bytes[]) : string[] {
+export function get_coeff_commits (
+  coeffs : Bytes[]
+) : string[] {
   // For each coefficient in the list:
   return coeffs.map(e => {
     // Convert to a scalar value.
@@ -102,11 +105,33 @@ export function get_coeff_commits (coeffs : Bytes[]) : string[] {
 }
 
 /**
+ * Create a list of public key commitments, one for each coefficient.
+ */
+export function merge_coeff_commits (
+  commits_a : string[],
+  commits_b : string[]
+) : string[] {
+  assert.equal_arr_size(commits_a, commits_b)
+  // Define an array of updated commits.
+  const commits : string[] = []
+  // For each commit in the list:
+  for (let i = 0; i < commits_a.length; i++) {
+    const point_a = lift_x(commits_a[i])
+    const point_b = lift_x(commits_b[i])
+    const point_c = G.ElementAdd(point_a, point_b)
+    const commit  = G.SerializeElement(point_c)
+    commits.push(commit.hex)
+  }
+  // Return the updated commits.
+  return commits
+}
+
+/**
  * Verify a secret share using a list of vss commitments.
  */
 export function verify_share (
   commits : Bytes[],
-  share   : SecretShare,
+  share   : SharePackage,
   thold   : number
 ) {
   const scalar = Buff.bytes(share.seckey).big

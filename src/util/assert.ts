@@ -49,3 +49,12 @@ export function is_equal_set <T> (array : T[]) {
     throw new Error('set does not have equal items')
   }
 }
+
+export function equal_arr_size <T> (
+  array_a : T[],
+  array_b : T[]
+) {
+  if (array_a.length !== array_b. length) {
+    throw new Error(`array lengths are unequal: ${array_a.length} !== ${array_b.length}`)
+  }
+}

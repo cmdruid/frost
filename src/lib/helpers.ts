@@ -1,8 +1,14 @@
-import { Buff, Bytes } from '@cmdcode/buff'
-import { hash340 }     from '@cmdcode/crypto-tools/hash'
-import { H }           from '@/ecc/index.js'
-import { _0n, _1n }    from '@/const.js'
-import { assert }      from '@/util/index.js'
+import { Buff, Bytes }        from '@cmdcode/buff'
+import { hash340 }            from '@cmdcode/crypto-tools/hash'
+import { H }                  from '@/ecc/index.js'
+import { _0n, _1n }           from '@/const.js'
+import { assert, get_record } from '@/util/index.js'
+
+import {
+  CommitPackage,
+  MemberPackage,
+  SharePackage
+} from '@/types/index.js'
 
 /**
  * Generates a secret key.
@@ -43,4 +49,14 @@ export function get_challenge (
   assert.size(grp_pk, 32)
   assert.size(grp_pn, 32)
   return hash340('BIP0340/challenge', grp_pn, grp_pk, message).big
+}
+
+export function get_membership (
+  commits : CommitPackage[],
+  shares  : SharePackage[],
+  idx     : number
+) : MemberPackage {
+  const share  = get_record(shares, idx)
+  const commit = get_record(commits, idx)
+  return { idx, commit, share }
 }

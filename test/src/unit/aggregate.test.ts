@@ -1,5 +1,5 @@
 import { Test }       from 'tape'
-import { SpecVector } from '../types.js'
+import { SpecVector } from '@/test/types.js'
 
 import {
   combine_partial_sigs,
