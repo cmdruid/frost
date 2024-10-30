@@ -48,8 +48,8 @@ import {
 // Compute the context data for the signing session.
 const ctx = get_session_ctx(group.pubkey, commits, message)
 
-// Convert the context indices into iterable numbers.
-const idx = ctx.indexes.map(i => Number(i))
+// Convert the share indices into iterable numbers.
+const idx = ctx.indexes.map(i => Number(i) - 1)
 
 // Collect a partial signature from each share.
 const psigs = idx.map(i => {

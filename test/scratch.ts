@@ -4,7 +4,7 @@ import {
   combine_partial_sigs,
   create_commit_pkg,
   create_share_group,
-  get_membership,
+  get_commit_pkg,
   get_pubkey,
   get_session_ctx,
   refresh_share_group,
@@ -36,13 +36,14 @@ const a_commits = a_shares.map(e => create_commit_pkg(e))
 
 // Compute some context data for the signing session.
 const a_ctx = get_session_ctx(a_group.pubkey, a_commits, message)
-const a_idx = a_ctx.indexes.map(e => Number(e))
+const a_idx = a_ctx.indexes.map(e => Number(e) - 1)
 
 // Create the partial signatures for a given signing context.
 const a_psigs = a_idx.map(i => {
-  const mbr = get_membership(a_commits, a_shares, i)
-  const sig = sign_msg(a_ctx, mbr.share, mbr.commit)
-  if (!verify_partial_sig(a_ctx, mbr.commit, sig.pubkey, sig.psig)) {
+  const share  = a_shares[i]
+  const commit = get_commit_pkg(a_commits, share)
+  const sig = sign_msg(a_ctx, share, commit)
+  if (!verify_partial_sig(a_ctx, commit, sig.pubkey, sig.psig)) {
     throw new Error('sig share failed validation')
   }
   return sig
@@ -73,13 +74,14 @@ const c_commits = c_shares.map(e => create_commit_pkg(e))
 
 // Compute some context data for the signing session.
 const c_ctx = get_session_ctx(c_group.pubkey, c_commits, message)
-const c_idx = c_ctx.indexes.map(e => Number(e))
+const c_idx = c_ctx.indexes.map(e => Number(e) - 1)
 
 // Create the partial signatures for a given signing context.
 const c_psigs = c_idx.map(i => {
-  const mbr = get_membership(c_commits, c_shares, i)
-  const sig = sign_msg(c_ctx, mbr.share, mbr.commit)
-  if (!verify_partial_sig(c_ctx, mbr.commit, sig.pubkey, sig.psig)) {
+  const share  = c_shares[i]
+  const commit = get_commit_pkg(c_commits, share)
+  const sig = sign_msg(c_ctx, share, commit)
+  if (!verify_partial_sig(c_ctx, commit, sig.pubkey, sig.psig)) {
     throw new Error('sig share failed validation')
   }
   return sig

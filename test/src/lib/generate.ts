@@ -36,8 +36,8 @@ if (!is_valid_shares) throw new Error('shares failed validation')
 const shares  = group.shares.slice(0, thold)
 const commits = shares.map(e => create_commit_pkg(e, nseed_h, nseed_b))
 // Compute some context data for the signing session.
-const ctx     = get_session_ctx(group.pubkey, commits, message)
-const idx     = ctx.indexes.map(i => Number(i))
+const ctx = get_session_ctx(group.pubkey, commits, message)
+const idx = ctx.indexes.map(i => Number(i) - 1)
 // Create the partial signatures for a given signing context.
 const psigs = idx.map(i => {
   const share  = shares[i]

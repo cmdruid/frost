@@ -46,7 +46,7 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
 
         // Compute some context data for the signing session.
         const ctx = get_session_ctx(group.pubkey, commits, message)
-        const idx = ctx.indexes.map(i => Number(i))
+        const idx = ctx.indexes.map(i => Number(i) - 1)
 
         // Create the partial signatures for a given signing context.
         const psigs = idx.map(i => {
