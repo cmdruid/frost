@@ -1,4 +1,6 @@
-import tape         from 'tape'
+import tape           from 'tape'
+import { CoreConfig } from '@cmdcode/core-cmd'
+
 import shares_test  from './src/unit/shares.test.js'
 import commit_test  from './src/unit/commit.test.js'
 import context_test from './src/unit/context.test.js'
@@ -10,6 +12,19 @@ import tx_test      from './src/e2e/tx.test.js'
 
 import vector from './src/vectors/spec.json' assert { type : 'json' }
 
+/* You may need to modify this config depending on your setup. */
+
+const config : Partial<CoreConfig> = {
+  corepath : 'test/bin/bitcoind',
+  clipath  : 'test/bin/bitcoin-cli',
+  confpath : 'test/bitcoin.conf',
+  datapath : 'test/data',
+  verbose  : false,
+  debug    : false,
+  isolated : true,
+  network  : 'regtest'
+}
+
 tape('Frost Test Suite', async t => {
   
   shares_test(t,  vector)
@@ -19,7 +34,7 @@ tape('Frost Test Suite', async t => {
   signer_test(t,  vector)
   combine_test(t, vector)
   
-  await tx_test(t)
+  await tx_test(t, config)
 
   stress_test(t, 10, 100)
 })

@@ -1,23 +1,15 @@
-import { CoreDaemon } from '@cmdcode/core-cmd'
+import { CoreConfig, CoreDaemon } from '@cmdcode/core-cmd'
 import { Test }       from 'tape'
 
 import { frost_keygen, frost_sign } from '../lib/signer.js'
 
 import { Address, Script, Signer, Tap, Tx } from '@cmdcode/tapscript'
 
-export default async function (t : Test) {
-
-  const core = new CoreDaemon({
-    corepath : 'test/bin/bitcoind',
-    clipath  : 'test/bin/bitcoin-cli',
-    confpath : 'test/bitcoin.conf',
-    datapath : 'test/data',
-    verbose  : false,
-    debug    : false,
-    isolated : true,
-    network  : 'regtest'
-  })
-
+export default async function (
+  t      : Test,
+  config : Partial<CoreConfig>
+) {
+  const core = new CoreDaemon(config)
   const client = await core.startup()
 
   t.test('Testing transaction signing', async t => {

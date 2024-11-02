@@ -8,9 +8,11 @@ The FROST protocol specifies two rounds for producing a threshold signature.
 
 **Initial setup of parameters (using a trusted dealer):**
 
+This repository use a trusted dealer method for demonstration purposes. Feel free to use your own DKG protocol for generating and distributing shares.
+
 ```ts
-import { create_share_group } from '@cmdcode/frost/lib'
-import { random_bytes }       from '@cmdcode/frost/util'
+import { create_key_group } from '@cmdcode/frost/lib'
+import { random_bytes }     from '@cmdcode/frost/util'
 
 // Generate a random secret key and message.
 const seckey  = random_bytes(32).hex
@@ -22,10 +24,12 @@ const threshold = 2
 const share_max = 3
 
 // Generate a group of secret shares.
-const group = create_share_group(secrets, threshold, share_max)
+const group = create_key_group(secrets, threshold, share_max)
 ```
 
 **Round 1 Example (nonce commitments):**
+
+Each member that is participating in the signing round must first create a nonce commitment:
 
 ```ts
 import { create_commit_pkg } from '@cmdcode/frost/lib'
@@ -35,7 +39,11 @@ const shares  = group.shares.slice(0, threshold)
 const commits = shares.map(e => create_commit_pkg(e))
 ```
 
+Each member then distributes their nonce commitment to other members.
+
 **Round 2 Example (signing with secret shares):**
+
+Once all participating member commitments have been collected, we can now produce a partial signature:
 
 ```ts
 import {
@@ -63,7 +71,7 @@ const psigs = idx.map(i => {
 })
 ```
 
-Once a threshold (t) number of partial signatures have been collected, you can aggregate them into a full signature:
+When the partial signatures have been collected, we can aggregate them into a full signature:
 
 ```ts
 import { combine_partial_sigs, verify_final_sig } from '@cmdcode/frost/lib'
@@ -77,8 +85,6 @@ const is_valid  = verify_final_sig(ctx, message, signature)
 console.log('is valid:', is_valid)
 ```
 
-The FROST protocol does not specify how the shamir secret is generated, or how the secret shares are distributed to the signers. This repository use a trusted dealer method for demonstration purposes. Feel free to use your own DKG protocol for generating and distributing shares.
-
 ## Development and Testing
 
 To run the test suite, use the following commands:
@@ -87,6 +93,14 @@ To run the test suite, use the following commands:
 yarn test    # For yarn.
 npm run test # For NPM.
 ```
+
+The test suite comes bundled with Bitcoin Core (located in `test/bin`) for testing purposes. Depending on your computer architecture, you may have to replace these binaries with another version, or change the default configuration in `test/tape.ts`.
+
+There are code examples located in `test/examples` for performing various protocols via FROST and DKG. You can run a test file via the following command:
+
+`yarn load test/example/<example_name>.ts`
+
+Feel free to check them out!
 
 ## Resources
 
