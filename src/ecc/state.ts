@@ -1,5 +1,5 @@
 import { Buff, Bytes } from '@cmdcode/buff'
-import { curve }       from '@/const.js'
+import { CURVE }       from '@/const.js'
 import { mod_n }       from './util.js'
 import * as G          from './group.js'
 
@@ -22,7 +22,7 @@ export function get_point_state (
   // Define the positive scalar.
   const pos  = BigInt(1)
   // Define the negative (inverse) scalar.
-  const neg  = curve.n - pos
+  const neg  = CURVE.n - pos
 
   let point : CurveElement = element,
       parity = pos, // Handles negation for current round.

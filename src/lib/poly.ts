@@ -1,4 +1,4 @@
-import { _0n, _1n, field }  from '@/const.js'
+import { _0n, _1n, FIELD }  from '@/const.js'
 import { mod_n }            from '@/ecc/util.js'
 import { assert }           from '@/util/index.js'
 
@@ -104,13 +104,13 @@ export function interpolate_x (
     // Skip the current x to avoid division by zero.
     if (x_j === x) continue
     // Update the numerator: multiply by x_j.
-    numerator = mod_n(field.mul(numerator, x_j))
+    numerator = mod_n(FIELD.mul(numerator, x_j))
     // Update the denominator: multiply by (x_j - x).
-    denominator = mod_n(field.mul(denominator, x_j - x))
+    denominator = mod_n(FIELD.mul(denominator, x_j - x))
   }
 
   // Return the final interpolation factor, computed as numerator/denominator, reduced mod n.
-  return mod_n(field.div(numerator, denominator))
+  return mod_n(FIELD.div(numerator, denominator))
 }
 
 /**
@@ -139,11 +139,11 @@ export function calc_lagrange_coeff (
     // Skip the participant index.
     if (x_j === P) continue
     // Update the numerator:
-    numerator   = mod_n(field.mul(numerator,   x - x_j))
+    numerator   = mod_n(FIELD.mul(numerator,   x - x_j))
     // Update the denominator:
-    denominator = mod_n(field.mul(denominator, P - x_j))
+    denominator = mod_n(FIELD.mul(denominator, P - x_j))
   }
 
   // Return the lagrange coefficient.
-  return mod_n(field.div(numerator, denominator))
+  return mod_n(FIELD.div(numerator, denominator))
 }

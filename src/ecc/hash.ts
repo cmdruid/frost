@@ -4,7 +4,7 @@
 import { Buff }         from '@cmdcode/buff'
 import { sha256 }       from '@noble/hashes/sha256'
 import { secp256k1 }    from '@noble/curves/secp256k1'
-import { ctx_str }      from '@/const.js'
+import { DOMAIN }       from '@/const.js'
 import { str_to_bytes } from './util.js'
 
 import { hash_to_field, Opts } from '@noble/curves/abstract/hash-to-curve'
@@ -17,31 +17,31 @@ function get_opts (DST : string) {
 }
 
 export function H1 (msg : Uint8Array) {
-  const DST  = ctx_str + 'rho'
+  const DST  = DOMAIN + 'rho'
   const nums = hash_to_field(msg, 1, get_opts(DST))
   return Buff.big(nums[0][0], 32)
 }
 
 export function H2 (msg : Uint8Array) {
-  const DST  = ctx_str + 'chal'
+  const DST  = DOMAIN + 'chal'
   const nums = hash_to_field(msg, 1, get_opts(DST))
   return Buff.big(nums[0][0], 32)
 }
 
 export function H3 (msg : Uint8Array) {
-  const DST  = ctx_str + 'nonce'
+  const DST  = DOMAIN + 'nonce'
   const nums = hash_to_field(msg, 1, get_opts(DST))
   return Buff.big(nums[0][0], 32)
 }
 
 export function H4 (msg : Uint8Array) {
-  const DST  = str_to_bytes(ctx_str + 'msg')
+  const DST  = str_to_bytes(DOMAIN + 'msg')
   const hash = sha256(new Uint8Array([ ...DST, ...msg ]))
   return new Buff(hash)
 }
 
 export function H5 (msg : Uint8Array) {
-  const DST  = str_to_bytes(ctx_str + 'com')
+  const DST  = str_to_bytes(DOMAIN + 'com')
   const hash = sha256(new Uint8Array([ ...DST, ...msg ]))
   return new Buff(hash)
 }

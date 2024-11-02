@@ -10,14 +10,14 @@ import type { CurveElement } from '@/types/index.js'
 
 import CONST from '@/const.js'
 
-const { curve, Point, _0n, _1n } = CONST
+const { CURVE, POINT, _0n, _1n } = CONST
 
 export function Order () : bigint {
-  return curve.p
+  return CURVE.p
 }
 
 export function Identity () : CurveElement {
-  return new Point(_0n, _1n, _0n)
+  return new POINT(_0n, _1n, _0n)
 }
 
 export function RandomScalar () {
@@ -76,7 +76,7 @@ export function SerializeElement (A : CurveElement) {
 
 export function DeserializeElement (bytes : Bytes) {
   const hex = Buff.bytes(bytes).hex
-  return Point.fromHex(hex)
+  return POINT.fromHex(hex)
 }
 
 export function SerializeScalar (scalar : Bytes) {

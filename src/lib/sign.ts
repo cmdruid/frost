@@ -2,7 +2,7 @@ import { Buff, Bytes }     from '@cmdcode/buff'
 import { schnorr }         from '@noble/curves/secp256k1'
 import { G }               from '@/ecc/index.js'
 import { lift_x, mod_n }   from '@/ecc/util.js'
-import { _0n, _1n, curve } from '@/const.js'
+import { _0n, _1n, CURVE } from '@/const.js'
 import { interpolate_x }   from './poly.js'
 
 import { get_bind_factor, get_pubkey } from './util.js'
@@ -47,8 +47,8 @@ export function sign_msg (
   const GR_elem = lift_x(ctx.group_pn)
 
   if (!GR_elem.hasEvenY()) {
-    snonce_h = curve.n - snonce_h
-    snonce_b = curve.n - snonce_b
+    snonce_h = CURVE.n - snonce_h
+    snonce_b = CURVE.n - snonce_b
   }
 
   let snonce_hbf = mod_n(snonce_h + (snonce_b * bind_factor))
@@ -112,12 +112,12 @@ export function verify_partial_sig (
   let public_elem = lift_x(share_pk)
 
   if (!P_elem.hasEvenY()) {
-    public_elem = G.ScalarMulti(public_elem, curve.n - _1n)
+    public_elem = G.ScalarMulti(public_elem, CURVE.n - _1n)
   }
 
   if (!R_elem.hasEvenY()) {
-    hidden_elem = G.ScalarMulti(hidden_elem, curve.n - _1n)
-    binder_elem = G.ScalarMulti(binder_elem, curve.n - _1n)
+    hidden_elem = G.ScalarMulti(hidden_elem, CURVE.n - _1n)
+    binder_elem = G.ScalarMulti(binder_elem, CURVE.n - _1n)
   }
 
   const commit_elem = G.ScalarMulti(binder_elem, binder)
