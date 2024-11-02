@@ -3,7 +3,7 @@ import { random_bytes } from '@cmdcode/frost/util'
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_share_group,
+  create_key_group,
   get_commit_pkg,
   get_session_ctx,
   sign_msg,
@@ -12,7 +12,7 @@ import {
   verify_share
 } from '@cmdcode/frost/lib'
 
-import type { ShareGroup } from '@/types/index.js'
+import type { KeyGroup } from '@/types/index.js'
 
 export function frost_keygen (
   threshold  : number = 11,
@@ -21,7 +21,7 @@ export function frost_keygen (
   //
   const secrets = [ random_bytes(32) ]
   // Generate a secret, package of shares, and group key.
-  const group = create_share_group(secrets, threshold, max_shares)
+  const group = create_key_group(threshold, max_shares, secrets)
   //
   group.shares.forEach(e => {
     if (!verify_share(group.commits, e, threshold)) {
@@ -33,7 +33,7 @@ export function frost_keygen (
 }
 
 export function frost_sign (
-  group   : ShareGroup,
+  group   : KeyGroup,
   message : string,
   tweaks  : string[] = [],
 ) {

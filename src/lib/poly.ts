@@ -1,33 +1,6 @@
-import { Buff, Bytes }      from '@cmdcode/buff'
 import { _0n, _1n, field }  from '@/const.js'
 import { mod_n }            from '@/ecc/util.js'
 import { assert }           from '@/util/index.js'
-
-/**
- * Creates a list of coefficients for use
- * in a Shamir Secret Sharing scheme.
- * 
- * For a deterministic result, you must provide the
- * same number of secrets as the threshold value.
- *  
- * @param secrets   : An array of 32-byte values.
- * @param threshold : The number of coefficients to generate.
- * @returns         : A list of bigints.
- */
-export function create_coeffs (
-  secrets   : Bytes[],
-  threshold : number,
-) {
-  const coeffs : bigint[] = []
-  for (let i = 0; i < threshold; i++) {
-    const secret = secrets.at(i)
-    const coeff  = (secret !== undefined)
-      ? new Buff(secret)
-      : Buff.random(32)
-    coeffs.push(mod_n(coeff.big))
-  }
-  return coeffs
-}
 
 /**
  * Evaluates a polynomial at a given value `x` using the provided coefficients `L`.
@@ -38,10 +11,10 @@ export function create_coeffs (
  * The coefficients are processed in reverse order, using Horner's method
  * to optimize the computation.
  * 
- * @param L Array of coefficients in ascending order of powers.
- * @param x The value at which to evaluate the polynomial.
- * @returns The result of the polynomial evaluation.
- * @throws  Will throw an error if `x` is zero.
+ * @param L : Array of coefficients in ascending order of powers.
+ * @param x : The value at which to evaluate the polynomial.
+ * @returns : The result of the polynomial evaluation.
+ * @throws  : Will throw an error if `x` is zero.
  */
 export function evaluate_x (
   L: bigint[],
@@ -137,5 +110,40 @@ export function interpolate_x (
   }
 
   // Return the final interpolation factor, computed as numerator/denominator, reduced mod n.
+  return mod_n(field.div(numerator, denominator))
+}
+
+/**
+ * Calculate the Lagrange coefficient for a participant,
+ * relative to other participants.
+ * 
+ * @param L A list of other participant indexes.
+ * @param P Index of the primary participant.
+ * @param x The point to evaluate.
+ * @returns A bigint representing the lagrange coefficient.
+ */
+export function calc_lagrange_coeff (
+  L : bigint[],
+  P : bigint,
+  x : bigint
+): bigint {
+  // Ensure that L has unique elements.
+  assert.is_unique_set(L)
+
+  // Initialize numerator and denominator.
+  let numerator   = _1n,
+      denominator = _1n
+
+  // Loop through each index in L:
+  for (const x_j of L) {
+    // Skip the participant index.
+    if (x_j === P) continue
+    // Update the numerator:
+    numerator   = mod_n(field.mul(numerator,   x - x_j))
+    // Update the denominator:
+    denominator = mod_n(field.mul(denominator, P - x_j))
+  }
+
+  // Return the lagrange coefficient.
   return mod_n(field.div(numerator, denominator))
 }

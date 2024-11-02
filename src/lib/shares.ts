@@ -1,7 +1,6 @@
-import { Buff, Bytes } from '@cmdcode/buff'
-import { G }           from '@/ecc/index.js'
-import { _0n, _1n }    from '@/const.js'
-
+import { Buff, Bytes }          from '@cmdcode/buff'
+import { G }                    from '@/ecc/index.js'
+import { _0n, _1n }             from '@/const.js'
 import { assert, get_record }   from '@/util/index.js'
 import { mod_n, pow_n, lift_x } from '@/ecc/util.js'
 
@@ -10,7 +9,7 @@ import {
   evaluate_x
 } from './poly.js'
 
-import type { SharePackage } from '@/types/index.js'
+import type { SecretShare, ShareSet } from '@/types/index.js'
 
 /**
  * Creates a list of secret shares for a given polynomial.
@@ -18,7 +17,7 @@ import type { SharePackage } from '@/types/index.js'
 export function create_shares (
   coeffs : bigint[],
   count  : number
-) : SharePackage[] {
+) : SecretShare[] {
   // Init our share list.
   const shares  = []
   // For each share to generate (skipping the root):
@@ -34,9 +33,17 @@ export function create_shares (
   return shares
 }
 
+export function get_share (
+  shares : SecretShare[],
+  index  : number 
+) {
+  // Return share at index.
+  return get_record(shares, index)
+}
+
 export function combine_shares (
-  shares : SharePackage[]
-) : SharePackage {
+  shares : SecretShare[]
+) : SecretShare {
   // Check that each share has the same idx.
   assert.is_equal_set(shares.map(e => e.idx))
   // Get the index value of the first share.
@@ -52,29 +59,12 @@ export function combine_shares (
 }
 
 /**
- * Interpolate secret shares and derive the root secret.
- */
-export function derive_secret (
-  shares : SharePackage[]
-) : string {
-  // Convert each share into coordinates.
-  const coords = shares.map(share => [
-    BigInt(share.idx),
-    Buff.bytes(share.seckey).big
-  ])
-  // Interpolate the coordinates to recreate the secret.
-  const secret = interpolate_root(coords)
-  // Return the secret as hex.
-  return Buff.big(secret).hex
-}
-
-/**
  * Merge a list of secret shares for a given polynomial.
  */
 export function merge_shares (
-  shares_a : SharePackage[],
-  shares_b : SharePackage[]
-) : SharePackage[] {
+  shares_a : SecretShare[],
+  shares_b : SecretShare[]
+) : SecretShare[] {
   assert.equal_arr_size(shares_a, shares_b)
   // Init our share list.
   const shares = []
@@ -90,48 +80,11 @@ export function merge_shares (
 }
 
 /**
- * Create a list of public key commitments, one for each coefficient.
- */
-export function get_coeff_commits (
-  coeffs : Bytes[]
-) : string[] {
-  // For each coefficient in the list:
-  return coeffs.map(e => {
-    // Convert to a scalar value.
-    const scalar = Buff.bytes(e).big
-    // Return the generator point value, in hex.
-    return G.ScalarBaseMulti(scalar).toHex(true)
-  })
-}
-
-/**
- * Create a list of public key commitments, one for each coefficient.
- */
-export function merge_coeff_commits (
-  commits_a : string[],
-  commits_b : string[]
-) : string[] {
-  assert.equal_arr_size(commits_a, commits_b)
-  // Define an array of updated commits.
-  const commits : string[] = []
-  // For each commit in the list:
-  for (let i = 0; i < commits_a.length; i++) {
-    const point_a = lift_x(commits_a[i])
-    const point_b = lift_x(commits_b[i])
-    const point_c = G.ElementAdd(point_a, point_b)
-    const commit  = G.SerializeElement(point_c)
-    commits.push(commit.hex)
-  }
-  // Return the updated commits.
-  return commits
-}
-
-/**
  * Verify a secret share using a list of vss commitments.
  */
 export function verify_share (
   commits : Bytes[],
-  share   : SharePackage,
+  share   : SecretShare,
   thold   : number
 ) {
   const scalar = Buff.bytes(share.seckey).big
@@ -145,4 +98,29 @@ export function verify_share (
   }
   assert.exists(S_ip)
   return S_i.x === S_ip.x
+}
+
+
+export function create_share_set (
+  shares : SecretShare[],
+  index  : number
+) : ShareSet {
+  return { idx : index, shares }
+}
+
+/**
+ * Interpolate secret shares and derive the root secret.
+ */
+export function derive_secret (
+  shares : SecretShare[]
+) : string {
+  // Convert each share into coordinates.
+  const coords = shares.map(share => [
+    BigInt(share.idx),
+    Buff.bytes(share.seckey).big
+  ])
+  // Interpolate the coordinates to recreate the secret.
+  const secret = interpolate_root(coords)
+  // Return the secret as hex.
+  return Buff.big(secret).hex
 }

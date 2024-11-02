@@ -2,8 +2,8 @@ import { Buff, Bytes } from '@cmdcode/buff'
 import { G }           from '@/ecc/index.js'
 
 import type {
-  BinderPackage,
-  PublicNoncePackage
+  BindFactor,
+  PublicNonce
 } from '@/types/index.js'
 
 export function get_pubkey(secret : Bytes) {
@@ -13,7 +13,7 @@ export function get_pubkey(secret : Bytes) {
 }
 
 export function get_group_commit (
-  pnonces : PublicNoncePackage[]
+  pnonces : PublicNonce[]
 ) {
   let enc_group_commit : Bytes[] = []
   for (const { idx, hidden_pn, binder_pn } of pnonces) {
@@ -24,18 +24,18 @@ export function get_group_commit (
 }
 
 export function get_nonce_ids (
-  pnonces : PublicNoncePackage[]
+  pnonces : PublicNonce[]
 ) : bigint[] {
   return pnonces.map(pn => BigInt(pn.idx))
 }
 
 export function get_bind_factor (
-  binders : BinderPackage[],
+  binders : BindFactor[],
   idx     : number
 ) : bigint {
-  for (const binder of binders) {
-    if (idx === binder.idx) {
-      return Buff.bytes(binder.bind_hash).big
+  for (const bind of binders) {
+    if (idx === bind.idx) {
+      return Buff.bytes(bind.factor).big
     }
   }
   throw new Error('invalid participant')

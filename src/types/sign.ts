@@ -1,16 +1,14 @@
 import { CommitPackage } from './commit.js'
-import { SharePackage }  from './share.js'
-import { Package }       from './util.js'
-
-export type MemberPackage    = Package<Membership>
-export type SignaturePackage = Package<ShareSignature>
+import { SecretShare }   from './share.js'
 
 export interface Membership {
+  idx    : number
   commit : CommitPackage
-  share  : SharePackage
+  share  : SecretShare
 }
 
 export interface ShareSignature {
+  idx    : number
   pubkey : string,
   psig   : string
 }

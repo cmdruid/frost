@@ -3,7 +3,7 @@ import { random_bytes } from '@cmdcode/frost/util'
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_share_group,
+  create_key_group,
   get_commit_pkg,
   get_session_ctx,
   sign_msg,
@@ -19,7 +19,7 @@ const threshold = 2
 const share_max = 3
 
 // Generate a group of secret shares.
-const group = create_share_group(secrets, threshold, share_max)
+const group = create_key_group(threshold, share_max, secrets)
 
 // Select a threshold (t) amount of shares and create nonce commitments.
 const shares  = group.shares.slice(0, threshold)

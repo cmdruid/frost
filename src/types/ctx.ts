@@ -1,6 +1,6 @@
 import { PointState } from './ecc.js'
 
-import { BinderPackage, PublicNoncePackage } from './commit.js'
+import { BindFactor, PublicNonce } from './commit.js'
 
 export type GroupSessionCtx = GroupKeyContext & GroupCommitContext
 
@@ -13,11 +13,11 @@ export interface GroupKeyContext {
 }
 
 export interface GroupCommitContext {
-  bind_factors : BinderPackage[],
+  bind_factors : BindFactor[],
   bind_prefix  : string,
   challenge    : bigint,
   group_pn     : string,
   indexes      : bigint[],
   message      : string,
-  pnonces      : PublicNoncePackage[]
+  pnonces      : PublicNonce[]
 }

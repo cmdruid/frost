@@ -6,7 +6,7 @@ import {
   derive_secret,
   verify_share,
   combine_shares,
-  create_share_group
+  create_key_group
 } from '@cmdcode/frost/lib'
 
 const aliases = [ 'alice', 'bob', 'carol', 'david', 'edward', 'frank', 'gerome' ]
@@ -21,7 +21,7 @@ export default function (tape : Test) {
         // Use hash of alias to create the root secret.
         const secret = Buff.str(alias).digest
         // Create a share package for the user.
-        const group = create_share_group([ secret ], 5, 7)
+        const group = create_key_group(5, 7, [ secret ])
         // Verify each share is included in the polynomial.
         group.shares.forEach(s => {
           const is_valid = verify_share(group.commits, s, 5)

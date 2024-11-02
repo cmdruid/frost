@@ -15,7 +15,7 @@ import type {
   GroupCommitContext,
   GroupKeyContext,
   GroupSessionCtx,
-  PublicNoncePackage
+  PublicNonce
 } from '@/types/index.js'
 
 /**
@@ -42,7 +42,7 @@ export function get_key_context (
  */
 export function get_commit_context (
   key_ctx : GroupKeyContext,
-  pnonces : PublicNoncePackage[],
+  pnonces : PublicNonce[],
   message : string,
 ) : GroupCommitContext {
   // Set the group pubkey from the key context.
@@ -68,7 +68,7 @@ export function get_commit_context (
  */
 export function get_session_ctx (
   group_pk : Bytes,
-  pnonces  : PublicNoncePackage[],
+  pnonces  : PublicNonce[],
   message  : string,
   tweaks?  : string[]
 ) : GroupSessionCtx {

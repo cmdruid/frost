@@ -1,8 +1,8 @@
-import { Buff, Bytes }    from '@cmdcode/buff'
-import { H, G }           from '@/ecc/index.js'
-import { _0n, _1n }       from '@/const.js'
-import { assert, get_record }         from '@/util/index.js'
-import { generate_nonce } from './helpers.js'
+import { Buff, Bytes }        from '@cmdcode/buff'
+import { H, G }               from '@/ecc/index.js'
+import { _0n, _1n }           from '@/const.js'
+import { assert, get_record } from '@/util/index.js'
+import { generate_nonce }     from './helpers.js'
 
 import {
   get_group_commit,
@@ -13,16 +13,16 @@ import {
 import type {
   CurveElement,
   CommitPackage,
-  PublicNoncePackage,
-  BinderPackage,
-  SharePackage
+  SecretShare,
+  PublicNonce,
+  BindFactor
 } from '@/types/index.js'
 
 /**
  * Constructs a byte-prefix for the signing session.
  */
 export function get_commit_prefix (
-  pnonces  : PublicNoncePackage[],
+  pnonces  : PublicNonce[],
   group_pk : string,
   message  : string
 ) : Buff {
@@ -37,13 +37,13 @@ export function get_commit_prefix (
  * Computes the binding values for each public nonce.
  */
 export function get_commit_binders (
-  nonces : PublicNoncePackage[],
+  nonces : PublicNonce[],
   prefix : Bytes
-) : BinderPackage[] {
+) : BindFactor[] {
   return nonces.map(({ idx }) => {
     const scalar    = G.SerializeScalar(idx)
     const rho_input = Buff.join([ prefix, scalar ])
-    return { idx, bind_hash: H.H1(rho_input).hex }
+    return { idx, factor: H.H1(rho_input).hex }
   })
 }
 
@@ -51,8 +51,8 @@ export function get_commit_binders (
  * Computes the group public nonce for the signing session.
  */
 export function get_group_nonce (
-  pnonces : PublicNoncePackage[],
-  binders : BinderPackage[]
+  pnonces : PublicNonce[],
+  binders : BindFactor[]
 ) : string {
   let group_commit : CurveElement | null = null
 
@@ -72,7 +72,7 @@ export function get_group_nonce (
  * Creates a commitment package for a FROST signing session.
  */
 export function create_commit_pkg (
-  secret_share : SharePackage,
+  secret_share : SecretShare,
   hidden_seed ?: string,
   binder_seed ?: string
 ) : CommitPackage {
@@ -86,7 +86,7 @@ export function create_commit_pkg (
 
 export function get_commit_pkg (
   commits : CommitPackage[],
-  share   : SharePackage
+  share   : SecretShare
 ) : CommitPackage {
   const idx    = share.idx
   return get_record(commits, idx)

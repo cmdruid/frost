@@ -16,10 +16,10 @@ import {
 import type {
   GroupKeyContext,
   GroupSessionCtx,
-  SharePackage,
-  SecretNoncePackage,
-  SignaturePackage,
-  PublicNoncePackage
+  SecretShare,
+  SecretNonce,
+  ShareSignature,
+  PublicNonce
 } from '@/types/index.js'
 
 /**
@@ -27,9 +27,9 @@ import type {
  */
 export function sign_msg (
   ctx    : GroupSessionCtx,
-  share  : SharePackage,
-  snonce : SecretNoncePackage
-) : SignaturePackage {
+  share  : SecretShare,
+  snonce : SecretNonce
+) : ShareSignature {
   const { bind_factors, challenge, indexes, group_pt : Q } = ctx
   
   const bind_factor = get_bind_factor(bind_factors, share.idx)
@@ -68,7 +68,7 @@ export function sign_msg (
  */
 export function combine_partial_sigs (
   context : GroupSessionCtx,
-  psigs   : SignaturePackage[]
+  psigs   : ShareSignature[]
 ) {
   //
   const { challenge, pnonces, group_pt, group_pk, message } = context
@@ -96,7 +96,7 @@ export function combine_partial_sigs (
  */
 export function verify_partial_sig (
   ctx        : GroupSessionCtx,
-  pnonce     : PublicNoncePackage,
+  pnonce     : PublicNonce,
   share_pk   : string,
   share_psig : string,
 ) {

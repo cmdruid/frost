@@ -5,7 +5,7 @@ import { random_bytes } from '@cmdcode/frost/util'
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_share_group,
+  create_key_group,
   get_commit_pkg,
   get_session_ctx,
   sign_msg,
@@ -29,7 +29,7 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
 
       try {
         // Generate a secret, package of shares, and group key.
-        const group = create_share_group(secrets, thold, share_ct)
+        const group = create_key_group(thold, share_ct, secrets)
 
         // This part is really slow.
 

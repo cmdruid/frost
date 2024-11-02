@@ -5,7 +5,7 @@ import { get_record, random_bytes } from '@cmdcode/frost/util'
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_share_group,
+  create_key_group,
   get_commit_pkg,
   get_session_ctx,
   sign_msg,
@@ -21,7 +21,7 @@ const nseed_h = secrets[0].hex
 const nseed_b = secrets[1].hex
 
 // Generate a group of shares that represent a public key.
-const group = create_share_group(secrets, thold, share_ct)
+const group = create_key_group(thold, share_ct, secrets)
 
 // Verify that all shares are included in the group key.
 const is_valid_shares = group.shares.every(e => {
@@ -66,7 +66,7 @@ console.log(JSON.stringify({
     const share  = shares[i]
     const commit = get_commit_pkg(commits, share)
     const psig   = get_record(psigs, i).psig
-    const binder = get_record(ctx.bind_factors, i).bind_hash
+    const binder = get_record(ctx.bind_factors, i).factor
     return { ...commit, ...share, nseed_h, nseed_b, binder, psig }
   })
 }, null, 2))

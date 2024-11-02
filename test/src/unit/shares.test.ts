@@ -3,7 +3,7 @@ import { SpecVector } from '../types.js'
 import { get_record } from '@cmdcode/frost/util'
 
 import {
-  create_share_group,
+  create_key_group,
   derive_secret,
   verify_share
 } from '@cmdcode/frost/lib'
@@ -11,7 +11,7 @@ import {
 export default function (tape : Test, vector : SpecVector) {
   const { commits, secrets, share_min, share_max } = vector.group
   tape.test('Testing share commitments', t => {
-    const group = create_share_group(secrets, share_min, share_max)
+    const group = create_key_group(share_min, share_max, secrets)
 
     for (let i = 0; i < commits.length; i++) {
       t.equal(group.commits[i], commits[i], `[${i}] commit key matches vector`)
