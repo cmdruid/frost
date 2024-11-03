@@ -1,6 +1,6 @@
 {
   "name": "@cmdcode/frost",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Flexible, round-optimized schnorr threshold signatures for Bitcoin.",
   "author": "Christopher Scott",
   "license": "MIT",
