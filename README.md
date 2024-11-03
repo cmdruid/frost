@@ -1,6 +1,6 @@
 # FROST
 
-Fast, round-optimized schnorr threshold signatures for Bitcoin.
+Flexible round-optimized schnorr threshold signatures for Bitcoin.
 
 ## How to Use
 
