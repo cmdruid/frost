@@ -5,6 +5,11 @@ export interface SecretShare {
   seckey : string
 }
 
+export interface PublicShare {
+  idx    : number
+  pubkey : string
+}
+
 export interface ShareSet {
   idx    : number
   shares : SecretShare[]

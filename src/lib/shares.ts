@@ -43,17 +43,24 @@ export function get_share (
 
 export function combine_shares (
   shares : SecretShare[]
-) : SecretShare {
-  // Check that each share has the same idx.
-  assert.is_equal_set(shares.map(e => e.idx))
-  // Get the index value of the first share.
-  const idx    = shares[0].idx
+) : string {
   // Sum all secret shares into a DKG secret.
   const secret = shares
     .map(e => Buff.bytes(e.seckey).big)
     .reduce((acc, cur) => mod_n(acc += cur), _0n)
   // Format group share into a secret key.
-  const seckey = Buff.big(secret, 32).hex
+  return Buff.big(secret, 32).hex
+}
+
+export function combine_set (
+  shares : SecretShare[]
+) : SecretShare {
+  // Check that each share has the same idx.
+  assert.is_equal_set(shares.map(e => e.idx))
+  // Get the index value of the first share.
+  const idx    = shares[0].idx
+  // Get the combined secret key.
+  const seckey = combine_shares(shares)
   // Return secret as a share package.
   return { idx, seckey }
 }
@@ -72,7 +79,7 @@ export function merge_shares (
   for (let i = 0; i < shares_a.length; i++) {
     const curr_share = shares_a[i]
     const aux_share  = get_record(shares_b, curr_share.idx)
-    const agg_share  = combine_shares([ curr_share, aux_share ])
+    const agg_share  = combine_set([ curr_share, aux_share ])
     shares.push(agg_share)
   }
   // Return the list of shares.

@@ -2,13 +2,13 @@ import { Buff, Bytes }     from '@cmdcode/buff'
 import { _1n }             from '@/const.js'
 import { get_point_state } from '@/ecc/state.js'
 import { lift_x }          from '@/ecc/util.js'
-import { get_nonce_ids }   from '@/lib/util.js'
 import { get_challenge }   from '@/lib/helpers.js'
 
 import {
   get_commit_binders,
   get_commit_prefix,
-  get_group_nonce
+  get_group_nonce,
+  get_nonce_ids
 } from './commit.js'
 
 import type {

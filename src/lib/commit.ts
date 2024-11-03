@@ -2,13 +2,11 @@ import { Buff, Bytes }        from '@cmdcode/buff'
 import { H, G }               from '@/ecc/index.js'
 import { _0n, _1n }           from '@/const.js'
 import { assert, get_record } from '@/util/index.js'
-import { generate_nonce }     from './helpers.js'
 
 import {
-  get_group_commit,
-  get_bind_factor,
+  generate_nonce,
   get_pubkey
-} from './util.js'
+} from './helpers.js'
 
 import type {
   CurveElement,
@@ -17,6 +15,12 @@ import type {
   PublicNonce,
   BindFactor
 } from '@/types/index.js'
+
+export function get_nonce_ids (
+  pnonces : PublicNonce[]
+) : bigint[] {
+  return pnonces.map(pn => BigInt(pn.idx))
+}
 
 /**
  * Constructs a byte-prefix for the signing session.
@@ -31,6 +35,29 @@ export function get_commit_prefix (
   const commit_list = get_group_commit(pnonces)
   const commit_hash = H.H5(commit_list)
   return Buff.join([ group_pk, msg_hash, commit_hash ])
+}
+
+export function get_group_commit (
+  pnonces : PublicNonce[]
+) {
+  let enc_group_commit : Bytes[] = []
+  for (const { idx, hidden_pn, binder_pn } of pnonces) {
+    const enc_commit = [ G.SerializeScalar(idx), hidden_pn, binder_pn ]
+    enc_group_commit = [ ...enc_group_commit, ...enc_commit ]
+  }
+  return Buff.join(enc_group_commit)
+}
+
+export function get_bind_factor (
+  binders : BindFactor[],
+  idx     : number
+) : bigint {
+  for (const bind of binders) {
+    if (idx === bind.idx) {
+      return Buff.bytes(bind.factor).big
+    }
+  }
+  throw new Error('invalid participant')
 }
 
 /**

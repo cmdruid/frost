@@ -1,8 +1,9 @@
 import { Buff, Bytes } from '@cmdcode/buff'
 import { hash340 }     from '@cmdcode/crypto-tools/hash'
-import { H }           from '@/ecc/index.js'
+import { G, H }        from '@/ecc/index.js'
 import { _0n, _1n }    from '@/const.js'
 import { assert }      from '@/util/index.js'
+import { lift_x } from '@/ecc/util.js'
 
 /**
  * Generates a secret key.
@@ -28,6 +29,23 @@ export function generate_nonce (
     : Buff.random(32)
   const secret_seed  = Buff.join([ aux, secret ])
   return H.H3(secret_seed)
+}
+
+
+export function get_pubkey (secret : Bytes) {
+  const scalar = Buff.bytes(secret).big
+  const point  = G.ScalarBaseMulti(scalar)
+  return G.SerializeElement(point).hex
+}
+
+export function tweak_pubkey (
+  pubkey : Bytes,
+  tweak  : Bytes
+) {
+  const coeff = Buff.bytes(tweak).big 
+  let   point = lift_x(pubkey)
+        point = point.multiply(coeff)
+  return G.SerializeElement(point).hex
 }
 
 /**

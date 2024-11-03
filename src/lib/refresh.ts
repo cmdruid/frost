@@ -2,7 +2,7 @@ import { Bytes }    from '@cmdcode/buff'
 import { _0n, _1n } from '@/const.js'
 
 import {
-  combine_shares,
+  combine_set,
   create_shares
 } from './shares.js'
 
@@ -15,8 +15,8 @@ import type { SecretShare, SharePackage } from '@/types/index.js'
 
 export function gen_refresh_shares (
   index     : number,
-  share_max : number,
   threshold : number,
+  share_max : number,
   secrets   : Bytes[] = []
 ) : SharePackage {
   // Create the auxiliary coefficients used to update the shares.
@@ -36,5 +36,5 @@ export function refresh_share (
   current_share  : SecretShare
 ) : SecretShare {
   const shares = [ current_share, ...refresh_shares ]
-  return combine_shares(shares)
+  return combine_set(shares)
 }

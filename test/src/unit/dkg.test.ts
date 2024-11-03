@@ -5,7 +5,7 @@ import { assert } from '@cmdcode/frost/util'
 import {
   derive_secret,
   verify_share,
-  combine_shares,
+  combine_set,
   create_key_group
 } from '@cmdcode/frost/lib'
 
@@ -38,7 +38,7 @@ export default function (tape : Test) {
         // Collect a share from each package at the given index.
         const shares = pkgs.map(pkg => pkg.shares[idx])
         // Derive a group share and return.
-        return combine_shares(shares)
+        return combine_set(shares)
       })
 
       // Derive the group secret from the shares.

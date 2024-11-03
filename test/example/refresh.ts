@@ -1,96 +1,81 @@
-/* needs to be refactored, coming soon! */
+import { random_bytes } from '@cmdcode/frost/util'
 
-// import { random_bytes } from '@cmdcode/frost/util'
+import {
+  combine_partial_sigs,
+  create_commit_pkg,
+  create_key_group,
+  gen_refresh_shares,
+  get_commit_pkg,
+  get_pubkey,
+  get_session_ctx,
+  get_share,
+  refresh_share,
+  sign_msg,
+  verify_final_sig,
+  verify_partial_sig
+} from '@cmdcode/frost/lib'
 
-// import {
-//   combine_partial_sigs,
-//   create_commit_pkg,
-//   create_key_group,
-//   get_commit_pkg,
-//   get_pubkey,
-//   get_session_ctx,
-//   sign_msg,
-//   verify_final_sig,
-//   verify_partial_sig,
-//   verify_share
-// } from '@cmdcode/frost/lib'
+import { collect_shares } from '../src/lib/util.js'
 
-// const seckey  = random_bytes(32).hex
-// const message = random_bytes(32).hex
-// const pubkey  = get_pubkey(seckey)
+const message = random_bytes(32).hex
+const seckey  = random_bytes(32).hex
+const pubkey  = get_pubkey(seckey)
 
-// console.log('master pk:', pubkey)
+console.log('master pk:', pubkey)
 
-// const secrets = [ seckey ]
+const secrets  = [ seckey ]
+const share_ct = 3
+const thold    = 2
 
-// const share_ct = 3
-// const thold    = 2
+// Generate a secret, package of shares, and group key.
+const group = create_key_group(thold, share_ct, secrets)
 
-// // Generate a secret, package of shares, and group key.
-// const a_group = create_key_group(thold, share_ct, secrets)
+console.log('group pk:', group.pubkey)
 
-// console.log('a_group pk:', a_group.pubkey)
+// Distribute the shares.
+const share_1 = get_share(group.shares, 1)
+const share_2 = get_share(group.shares, 2)
+const share_3 = get_share(group.shares, 3)
 
-// // Use a t amount of shares to create nonce commitments.
-// const a_shares  = a_group.shares.slice(0, thold)
-// const a_commits = a_shares.map(e => create_commit_pkg(e))
+// Generate recovery shares from each member.
+const ref_shares_1 = gen_refresh_shares(1, thold, share_ct).shares
+const ref_shares_2 = gen_refresh_shares(2, thold, share_ct).shares
+const ref_shares_3 = gen_refresh_shares(3, thold, share_ct).shares
+const ref_shares_g = [ ref_shares_1, ref_shares_2, ref_shares_3 ]
 
-// // Compute some context data for the signing session.
-// const a_ctx = get_session_ctx(a_group.pubkey, a_commits, message)
-// const a_idx = a_ctx.indexes.map(e => Number(e) - 1)
+// Distribute and aggregate the recovery shares from each member.
+const agg_shares_1 = collect_shares(ref_shares_g, 1)
+const agg_shares_2 = collect_shares(ref_shares_g, 2)
+const agg_shares_3 = collect_shares(ref_shares_g, 3)
 
-// // Create the partial signatures for a given signing context.
-// const a_psigs = a_idx.map(i => {
-//   const share  = a_shares[i]
-//   const commit = get_commit_pkg(a_commits, share)
-//   const sig = sign_msg(a_ctx, share, commit)
-//   if (!verify_partial_sig(a_ctx, commit, sig.pubkey, sig.psig)) {
-//     throw new Error('sig share failed validation')
-//   }
-//   return sig
-// })
+// Provide the aggregate recovery shares to the target participant.
+const new_share_1 = refresh_share(agg_shares_1, share_1)
+const new_share_2 = refresh_share(agg_shares_2, share_2)
+const new_share_3 = refresh_share(agg_shares_3, share_3)
+const new_shares  = [ new_share_1, new_share_2, new_share_3 ]
 
-// // Aggregate the partial signatures into a single signature.
-// const a_signature = combine_partial_sigs(a_ctx, a_psigs)
-// const a_is_valid  = verify_final_sig(a_ctx, message, a_signature)
+// Select a threshold (t) amount of shares and create nonce commitments.
+const commits = new_shares.map(e => create_commit_pkg(e))
 
-// console.log('Group A is valid:', a_is_valid)
-// console.log('group A shares:', a_group.shares)
+// Compute the context data for the signing session.
+const ctx = get_session_ctx(group.pubkey, commits, message)
 
-// // Update shares.
-// const c_group = refresh_share_group(a_group)
+// Convert the share indices into iterable numbers.
+const idx = ctx.indexes.map(i => Number(i) - 1)
 
-// console.log('c_group pk:', c_group.pubkey)
+// Collect a partial signature from each share.
+const psigs = idx.map(i => {
+  const share  = new_shares[i]
+  const commit = get_commit_pkg(commits, share)
+  const sig    = sign_msg(ctx, share, commit)
+  if (!verify_partial_sig(ctx, commit, sig.pubkey, sig.psig)) {
+    throw new Error('sig share failed validation')
+  }
+  return sig
+})
 
-// // Verify that all shares are included in the group key.
-// c_group.shares.every(e => {
-//   if (!verify_share(c_group.commits, e, thold)) {
-//     throw new Error('invalid share in the group at index: ' + e.idx)
-//   }
-// })
+// Aggregate the partial signatures into a single signature.
+const signature = combine_partial_sigs(ctx, psigs)
+const is_valid  = verify_final_sig(ctx, message, signature)
 
-// // Use a t amount of shares to create nonce commitments.
-// const c_shares  = c_group.shares.slice(0, thold)
-// const c_commits = c_shares.map(e => create_commit_pkg(e))
-
-// // Compute some context data for the signing session.
-// const c_ctx = get_session_ctx(c_group.pubkey, c_commits, message)
-// const c_idx = c_ctx.indexes.map(e => Number(e) - 1)
-
-// // Create the partial signatures for a given signing context.
-// const c_psigs = c_idx.map(i => {
-//   const share  = c_shares[i]
-//   const commit = get_commit_pkg(c_commits, share)
-//   const sig = sign_msg(c_ctx, share, commit)
-//   if (!verify_partial_sig(c_ctx, commit, sig.pubkey, sig.psig)) {
-//     throw new Error('sig share failed validation')
-//   }
-//   return sig
-// })
-
-// // Aggregate the partial signatures into a single signature.
-// const c_signature = combine_partial_sigs(c_ctx, c_psigs)
-// const c_is_valid  = verify_final_sig(c_ctx, message, c_signature)
-
-// console.log('Group C is valid:', c_is_valid)
-// console.log('group C shares:', c_group.shares)
+console.log('is valid:', is_valid)

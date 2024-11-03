@@ -3,14 +3,14 @@ import { schnorr }         from '@noble/curves/secp256k1'
 import { G }               from '@/ecc/index.js'
 import { lift_x, mod_n }   from '@/ecc/util.js'
 import { _0n, _1n, CURVE } from '@/const.js'
+import { get_pubkey }      from './helpers.js'
 import { interpolate_x }   from './poly.js'
-
-import { get_bind_factor, get_pubkey } from './util.js'
 
 import {
   get_commit_binders,
   get_commit_prefix,
-  get_group_nonce
+  get_group_nonce,
+  get_bind_factor
 } from './commit.js'
 
 import type {
