@@ -1,9 +1,8 @@
-import { Buff, Bytes } from '@cmdcode/buff'
-import { hash340 }     from '@cmdcode/crypto-tools/hash'
-import { G, H }        from '@/ecc/index.js'
-import { _0n, _1n }    from '@/const.js'
-import { assert }      from '@/util/index.js'
-import { lift_x } from '@/ecc/util.js'
+import { Buff, Bytes }     from '@cmdcode/buff'
+import { G, H }            from '@/ecc/index.js'
+import { lift_x }          from '@/ecc/util.js'
+import { _0n, _1n }        from '@/const.js'
+import { assert, hash340 } from '@/util/index.js'
 
 /**
  * Generates a secret key.
@@ -60,5 +59,6 @@ export function get_challenge (
   const grp_pn = Buff.bytes(pnonce).slice(1)
   assert.size(grp_pk, 32)
   assert.size(grp_pn, 32)
-  return hash340('BIP0340/challenge', grp_pn, grp_pk, message).big
+  const digest = hash340('BIP0340/challenge', grp_pn, grp_pk, message)
+  return digest.big
 }

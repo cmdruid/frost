@@ -1,4 +1,4 @@
-import { Buff } from '@cmdcode/buff'
+import { Buff, Bytes } from '@cmdcode/buff'
 
 export function random_bytes (size = 32) {
   return Buff.random(size)
@@ -17,4 +17,18 @@ export function get_record <T extends { idx : number }> (
     throw new Error('record not found for index: ' + idx)
   }
   return record
+}
+
+export function taghash (tag : string) : Buff {
+  const hash = Buff.str(tag).digest
+  return Buff.join([ hash, hash ])
+}
+
+export function hash340 (
+  tag : string,
+  ...data : Bytes[]
+) : Buff {
+  const hash  = taghash(tag)
+  const bytes = data.map(e => Buff.bytes(e))
+  return Buff.join([ hash, ...bytes ]).digest
 }
