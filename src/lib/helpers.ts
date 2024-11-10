@@ -1,6 +1,6 @@
 import { Buff, Bytes }     from '@cmdcode/buff'
 import { G, H }            from '@/ecc/index.js'
-import { lift_x }          from '@/ecc/util.js'
+import { lift_x, mod_n }          from '@/ecc/util.js'
 import { _0n, _1n }        from '@/const.js'
 import { assert, hash340 } from '@/util/index.js'
 
@@ -30,6 +30,15 @@ export function generate_nonce (
   return H.H3(secret_seed)
 }
 
+export function tweak_seckey (
+  seckey : Bytes,
+  tweak  : Bytes
+) {
+  const coeff   = Buff.bytes(tweak).big 
+  const secret  = Buff.bytes(seckey).big
+  const tweaked = mod_n(secret * coeff)
+  return Buff.big(tweaked).hex
+}
 
 export function get_pubkey (secret : Bytes) {
   const scalar = Buff.bytes(secret).big
