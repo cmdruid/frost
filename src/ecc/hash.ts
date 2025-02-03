@@ -3,14 +3,12 @@
 
 import { Buff }         from '@cmdcode/buff'
 import { sha256 }       from '@noble/hashes/sha256'
-import { secp256k1 }    from '@noble/curves/secp256k1'
-import { DOMAIN }       from '@/const.js'
+import { DOMAIN, _N }   from '@/const.js'
 import { str_to_bytes } from './util.js'
 
 import { hash_to_field, Opts } from '@noble/curves/abstract/hash-to-curve'
 
-const CURVE = secp256k1.CURVE
-const OPT   = { m: 1, p: CURVE.n, k: 128, expand: 'xmd', hash: sha256 }
+const OPT = { m: 1, p: _N, k: 128, expand: 'xmd', hash: sha256 }
 
 function get_opts (DST : string) {
   return { ...OPT, DST } as Opts

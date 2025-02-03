@@ -1,19 +1,19 @@
 // As specified in draft-irtf-cfrg-frost-15, section 3.1.
 // https://www.ietf.org/archive/id/draft-irtf-cfrg-frost-15.html
 
-import { Buff, Bytes }  from '@cmdcode/buff'
-import { secp256k1 }    from '@noble/curves/secp256k1'
-import { assert }       from '@/util/index.js'
-import { mod_n }        from './util.js'
+import { Buff, Bytes } from '@cmdcode/buff'
+import { secp256k1 }   from '@noble/curves/secp256k1'
+import { assert }      from '@/util/index.js'
+import { mod_n }       from './util.js'
 
 import type { CurveElement } from '@/types/index.js'
 
 import CONST from '@/const.js'
 
-const { CURVE, POINT, _0n, _1n } = CONST
+const { POINT, _0n, _1n, _N } = CONST
 
 export function Order () : bigint {
-  return CURVE.p
+  return _N
 }
 
 export function Identity () : CurveElement {

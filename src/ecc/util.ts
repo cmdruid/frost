@@ -3,20 +3,20 @@ import { mod, pow }    from '@noble/curves/abstract/modular'
 
 import CONST from '@/const.js'
 
-const { CURVE, POINT } = CONST
+const { POINT, _N, _P } = CONST
 
 export function mod_n (x : bigint) {
-  return mod(x, CURVE.n)
+  return mod(x, _N)
 }
 
 export function mod_p (x : bigint) {
-  return mod(x, CURVE.p)
+  return mod(x, _P)
 }
 
 export function pow_n (x : number | bigint, p : number | bigint) {
   if (typeof x === 'number') x = BigInt(x)
   if (typeof p === 'number') p = BigInt(p)
-  return pow(x, p, CURVE.n)
+  return pow(x, p, _N)
 }
 
 export function str_to_bytes (str : string) {
