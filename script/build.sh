@@ -1,58 +1,82 @@
 #!/bin/bash
 
+# Configuration
 DIRECTORY="./dist"
 EXTENSIONS=("js" "ts")   # The file extensions to target. Add more extensions as needed.
 ABSOLUTE_PATH="@/"       # The path we are replacing.
 DEPTH_OFFSET=3           # The offset for our depth counter.
 
-# Clean the existing dist directory.
-rm -rf "$DIRECTORY"
-mkdir -p "$DIRECTORY"
+# Helper function to clean and prepare the dist directory
+clean_dist_directory() {
+  echo "Cleaning dist directory..."
+  rm -rf "$DIRECTORY"
+  mkdir -p "$DIRECTORY"
+}
 
-# Copy and format the package.json file.
-cp package.json $DIRECTORY/package.json
-sed -i "s#$DIRECTORY#.#g" "$DIRECTORY/package.json"
+# Helper function to prepare package.json
+prepare_package_json() {
+  echo "Preparing package.json..."
+  cp package.json "$DIRECTORY/package.json"
+  sed -i "s#$DIRECTORY#.#g" "$DIRECTORY/package.json"
+}
 
-# Build the current project source using tsc and rollup.
-yarn tsc
-
-if [ $? -ne 0 ]; then
+# Helper function to run build tools
+build_project() {
+  echo "Running TypeScript compiler..."
+  if ! npx tsc; then
     echo "TypeScript build failed."
     exit 1
-fi
+  fi
 
-yarn rollup -c rollup.config.ts --configPlugin typescript
-
-if [ $? -ne 0 ]; then
+  echo "Running Rollup bundler..."
+  if ! npx rollup -c rollup.config.ts --configPlugin typescript; then
     echo "Rollup build failed."
     exit 1
-fi
+  fi
+}
 
-# Resolve path aliases in files by adjusting for file depth.
-for EXTENSION in "${EXTENSIONS[@]}"
-do
-    # Loop through all files in the directory that match the current extension.
-    find "$DIRECTORY" -name "*.$EXTENSION" -type f | while read -r file
-    do
-        # Count the number of slashes in the file's path to determine its depth
-        DEPTH=$(echo "$file" | tr -cd '/' | wc -c)
+# Helper function to get the appropriate sed command based on OS
+get_sed_command() {
+  local file="$1"
+  local pattern="$2"
+  local replacement="$3"
 
-        # Build a relative path string based on the depth.
-        RELATIVE_PATH=""
-        for (( i=DEPTH_OFFSET; i<=$DEPTH; i++ ))
-        do
-            RELATIVE_PATH="../$RELATIVE_PATH"
-        done
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s|$pattern|$replacement|g" "$file"
+  else
+    sed -i "s|$pattern|$replacement|g" "$file"
+  fi
+}
 
-        # Determine if we are on macOS or Linux, and use the appropriate sed syntax.
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS sed syntax
-            sed -i '' "s|$ABSOLUTE_PATH|$RELATIVE_PATH|g" "$file"
-        else
-            # Linux sed syntax
-            sed -i "s|$ABSOLUTE_PATH|$RELATIVE_PATH|g" "$file"
-        fi
+# Helper function to resolve path aliases
+resolve_path_aliases() {
+  echo "Resolving path aliases..."
+  for EXTENSION in "${EXTENSIONS[@]}"; do
+    find "$DIRECTORY" -name "*.$EXTENSION" -type f | while read -r file; do
+      # Calculate depth and relative path
+      DEPTH=$(echo "$file" | tr -cd '/' | wc -c)
+      RELATIVE_PATH=""
+      
+      for (( i=DEPTH_OFFSET; i<=$DEPTH; i++ )); do
+        RELATIVE_PATH="../$RELATIVE_PATH"
+      done
+
+      get_sed_command "$file" "$ABSOLUTE_PATH" "$RELATIVE_PATH"
     done
-done
+  done
+}
 
-echo "Build completed successfully."
+# Main execution
+main() {
+  echo "Starting build process..."
+  
+  clean_dist_directory
+  prepare_package_json
+  build_project
+  resolve_path_aliases
+  
+  echo "Build completed successfully."
+}
+
+# Run the script
+main

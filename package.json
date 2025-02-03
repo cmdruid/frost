@@ -44,9 +44,9 @@
   "scripts": {
     "build": "./script/build.sh",
     "load": "tsx --tsconfig ./test/tsconfig.json",
-    "release": "yarn test && yarn build",
-    "scratch": "yarn load test/scratch.ts",
-    "test": " yarn load test/tape.ts | tap-spec"
+    "release": "npm test && npm run build",
+    "scratch": "npm run load test/scratch.ts",
+    "test": "npm run load test/tape.ts | faucet"
   },
   "devDependencies": {
     "@cmdcode/core-cmd": "^1.6.5",
@@ -59,8 +59,8 @@
     "@rollup/plugin-typescript": "^12.1.1",
     "@types/node": "^22.9.0",
     "@types/tape": "^5.6.4",
+    "faucet": "^0.0.4",
     "rollup": "^4.24.4",
-    "tap-spec": "^5.0.0",
     "tape": "^5.9.0",
     "tslib": "^2.8.1",
     "tsx": "^4.19.2",
@@ -70,5 +70,6 @@
     "@cmdcode/buff": "^2.2.5",
     "@noble/curves": "^1.6.0",
     "@noble/hashes": "^1.5.0"
-  }
+  },
+  "packageManager": "yarn@4.6.0+sha512.5383cc12567a95f1d668fbe762dfe0075c595b4bfff433be478dbbe24e05251a8e8c3eb992a986667c1d53b6c3a9c85b8398c35a960587fbd9fa3a0915406728"
 }
