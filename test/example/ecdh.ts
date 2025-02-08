@@ -2,7 +2,7 @@ import { random_bytes } from '@cmdcode/frost/util'
 
 import {
   create_ecdh_share,
-  create_key_group,
+  create_dealer_set,
   derive_ecdh_secret,
   generate_seckey,
   get_pubkey,
@@ -19,7 +19,7 @@ const demo_seckey = generate_seckey()
 const demo_pubkey = get_pubkey(demo_seckey)
 
 // Generate a secret, package of shares, and group key.
-const group   = create_key_group(threshold, share_max, secrets)
+const group   = create_dealer_set(threshold, share_max, secrets)
 
 // Define the members of the scheme.
 const members = [ 1, 3 ]
@@ -34,7 +34,7 @@ const ecdh_share_3 = create_ecdh_share(members, share_3, demo_pubkey)
 
 // Derive the shared secret.
 const mstr_shared_secret  = tweak_pubkey(demo_pubkey, seckey)
-const demo_shared_secret  = tweak_pubkey(group.pubkey, demo_seckey)
+const demo_shared_secret  = tweak_pubkey(group.group_pk, demo_seckey)
 const frost_shared_secret = derive_ecdh_secret([ ecdh_share_1, ecdh_share_3 ])
 
 console.log('demo shared secret  :', mstr_shared_secret)

@@ -3,10 +3,10 @@ import { Buff }   from '@cmdcode/buff'
 import { assert } from '@cmdcode/frost/util'
 
 import {
-  derive_secret,
+  derive_shares_secret,
   verify_share,
   combine_set,
-  create_key_group
+  create_dealer_set
 } from '@cmdcode/frost/lib'
 
 const aliases = [ 'alice', 'bob', 'carol', 'david', 'edward', 'frank', 'gerome' ]
@@ -21,10 +21,10 @@ export default function (tape : Test) {
         // Use hash of alias to create the root secret.
         const secret = Buff.str(alias).digest
         // Create a share package for the user.
-        const group = create_key_group(5, 7, [ secret ])
+        const group = create_dealer_set(5, 7, [ secret ])
         // Verify each share is included in the polynomial.
         group.shares.forEach(s => {
-          const is_valid = verify_share(group.commits, s, 5)
+          const is_valid = verify_share(group.vss_commits, s, 5)
           assert.ok(is_valid, 'share failed validation')
         })
         // Return the share package for the user.
@@ -42,14 +42,14 @@ export default function (tape : Test) {
       })
 
       // Derive the group secret from the shares.
-      const secret = derive_secret(gshares.slice(0, 5))
+      const secret = derive_shares_secret(gshares.slice(0, 5))
 
       t.equal(secret, target, 'group secret matches target')
 
       // Stress test secret derivation using randomized order.
       for (let i = 0; i < 20; i++) {
         gshares = gshares.sort(() => Math.random() - 0.5)
-        const s2 = derive_secret(gshares.slice(0, 5))
+        const s2 = derive_shares_secret(gshares.slice(0, 5))
         assert.ok(secret === s2, 'secret does not match control')
       }
 

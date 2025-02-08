@@ -1,4 +1,4 @@
-export type CommitPackage = SecretNonce & PublicNonce
+export type CommitmentPackage = SecretNonce & PublicNonce
 
 export interface SecretNonce {
   idx       : number

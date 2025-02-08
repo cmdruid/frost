@@ -4,7 +4,7 @@ import { SpecVector } from '@/test/types.js'
 import {
   combine_partial_sigs,
   get_pubkey,
-  get_session_ctx,
+  get_group_signing_ctx,
   verify_final_sig
 } from '@cmdcode/frost/lib'
 
@@ -17,7 +17,7 @@ export default function (tape : Test, vector : SpecVector) {
       return { idx, hidden_pn: pnonce_h, binder_pn: pnonce_b }
     })
 
-    const context = get_session_ctx(grp_pubkey, pnonces, message)
+    const context = get_group_signing_ctx(grp_pubkey, pnonces, message)
 
     const sig_shares = vector.members.map(({ idx, psig, seckey }) => {
       const pubkey = get_pubkey(seckey)

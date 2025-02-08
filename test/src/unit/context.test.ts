@@ -4,9 +4,9 @@ import { SpecVector } from '../types.js'
 import { get_record } from '@cmdcode/frost/util'
 
 import {
-  get_commit_binders,
-  get_commit_prefix,
-  get_group_nonce,
+  get_group_binders,
+  get_group_prefix,
+  get_group_pubnonce,
   get_challenge
 } from '@cmdcode/frost/lib'
 
@@ -19,8 +19,8 @@ export default function (tape : Test, vector : SpecVector) {
       return { idx, hidden_pn: pnonce_h, binder_pn: pnonce_b }
     })
 
-    const prefix  = get_commit_prefix(pnonces, grp_pubkey, message).hex
-    const binders = get_commit_binders(pnonces, prefix)
+    const prefix  = get_group_prefix(pnonces, grp_pubkey, message).hex
+    const binders = get_group_binders(pnonces, prefix)
 
     t.equal(prefix, grp_prefix, 'binder prefix should match vector')
 
@@ -29,7 +29,7 @@ export default function (tape : Test, vector : SpecVector) {
       t.equal(binder.factor, mbr.binder, `[${mbr.idx}] binder factor should match vector`)
     }
 
-    const group_nonce = get_group_nonce(pnonces, binders)
+    const group_nonce = get_group_pubnonce(pnonces, binders)
     
     t.equal(group_nonce, grp_pnonce, 'group pubnonce should match vector')
 

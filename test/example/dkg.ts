@@ -2,9 +2,9 @@ import { Buff }   from '@cmdcode/buff'
 import { assert } from '@cmdcode/frost/util'
 
 import {
-  derive_secret,
+  derive_shares_secret,
   combine_set,
-  create_key_group
+  create_dealer_set
 } from '@cmdcode/frost/lib'
 
 const aliases = [ 'alice', 'bob', 'carol', 'david', 'edward', 'frank', 'gerome' ]
@@ -16,9 +16,9 @@ const target  = '1353adcaf8f428bc77e61f83261dca4b6697c45ad5a35b0ea591dc13ecb7dca
  */
 const groups = aliases.map(alias => {
   // Use hash of alias to create the root secret.
-  const secret  = Buff.str(alias).digest
+  const secret = Buff.str(alias).digest
   // Create a share package for the user.
-  const group = create_key_group(5, 7, [ secret ])
+  const group  = create_dealer_set(5, 7, [ secret ])
   // Return the share package for the user.
   return group
 })
@@ -39,6 +39,6 @@ let gshares = aliases.map((_, idx) => {
  * All users now have a unique aggregate share of an unknown
  * group secret, with each share known only to the user at index.
  */
-const secret = derive_secret(gshares.slice(0, 5))
+const secret = derive_shares_secret(gshares.slice(0, 5))
 
 assert.ok(secret === target, 'secret does not match target')

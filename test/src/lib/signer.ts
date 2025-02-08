@@ -3,16 +3,16 @@ import { random_bytes } from '@cmdcode/frost/util'
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_key_group,
+  create_dealer_set,
   get_commit_pkg,
-  get_session_ctx,
+  get_group_signing_ctx,
   sign_msg,
   verify_final_sig,
   verify_partial_sig,
   verify_share
 } from '@cmdcode/frost/lib'
 
-import type { KeyGroup } from '@/types/index.js'
+import type { DealerShareSet } from '@/types/index.js'
 
 export function frost_keygen (
   threshold  : number = 11,
@@ -21,10 +21,10 @@ export function frost_keygen (
   //
   const secrets = [ random_bytes(32) ]
   // Generate a secret, package of shares, and group key.
-  const group = create_key_group(threshold, max_shares, secrets)
+  const group = create_dealer_set(threshold, max_shares, secrets)
   //
   group.shares.forEach(e => {
-    if (!verify_share(group.commits, e, threshold)) {
+    if (!verify_share(group.vss_commits, e, threshold)) {
       throw new Error(`share ${e.idx} failed validation:, ${e.seckey}`)
     }
   })
@@ -33,16 +33,16 @@ export function frost_keygen (
 }
 
 export function frost_sign (
-  group   : KeyGroup,
+  group   : DealerShareSet,
   message : string,
   tweaks  : string[] = [],
 ) {
   // Use a t amount of shares to create nonce commitments.
-  const threshold = group.commits.length
+  const threshold = group.vss_commits.length
   const shares    = group.shares.slice(0, threshold)
   const commits   = shares.map(e => create_commit_pkg(e))
   // Compute some context data for the signing session.
-  const ctx = get_session_ctx(group.pubkey, commits, message, tweaks)
+  const ctx = get_group_signing_ctx(group.group_pk, commits, message, tweaks)
   const idx = ctx.indexes.map(i => Number(i) - 1)
   // Create the partial signatures for a given signing context.
   const psigs = idx.map(i => {

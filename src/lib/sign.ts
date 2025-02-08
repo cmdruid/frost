@@ -7,15 +7,15 @@ import { get_pubkey }      from './helpers.js'
 import { interpolate_x }   from './poly.js'
 
 import {
-  get_commit_binders,
-  get_commit_prefix,
-  get_group_nonce,
+  get_group_binders,
+  get_group_prefix,
+  get_group_pubnonce,
   get_bind_factor
 } from './commit.js'
 
 import type {
   GroupKeyContext,
-  GroupSessionCtx,
+  GroupSigningCtx,
   SecretShare,
   SecretNonce,
   ShareSignature,
@@ -26,7 +26,7 @@ import type {
  * Sign a message using a secret share and secret nonce value.
  */
 export function sign_msg (
-  ctx    : GroupSessionCtx,
+  ctx    : GroupSigningCtx,
   share  : SecretShare,
   snonce : SecretNonce
 ) : ShareSignature {
@@ -67,7 +67,7 @@ export function sign_msg (
  * Combine the signature shares from a FROST signing session.
  */
 export function combine_partial_sigs (
-  context : GroupSessionCtx,
+  context : GroupSigningCtx,
   psigs   : ShareSignature[]
 ) {
   //
@@ -75,11 +75,11 @@ export function combine_partial_sigs (
   //
   const { parity, tweak } = group_pt
   //
-  const commit_prefix = get_commit_prefix(pnonces, group_pk, message)
+  const commit_prefix = get_group_prefix(pnonces, group_pk, message)
   // Compute the binding factors
-  const group_binders = get_commit_binders(pnonces, commit_prefix)
+  const group_binders = get_group_binders(pnonces, commit_prefix)
   // Compute the group commitment
-  const group_pnonce  = get_group_nonce(pnonces, group_binders)
+  const group_pnonce  = get_group_pubnonce(pnonces, group_binders)
   // Compute aggregated signature
   const s = psigs
     .map(e => Buff.hex(e.psig).big)
@@ -95,7 +95,7 @@ export function combine_partial_sigs (
  * Verify a signature share is valid.
  */
 export function verify_partial_sig (
-  ctx        : GroupSessionCtx,
+  ctx        : GroupSigningCtx,
   pnonce     : PublicNonce,
   share_pk   : string,
   share_psig : string,

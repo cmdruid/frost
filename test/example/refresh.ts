@@ -3,11 +3,11 @@ import { random_bytes } from '@cmdcode/frost/util'
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_key_group,
+  create_dealer_set,
   gen_refresh_shares,
   get_commit_pkg,
+  get_group_signing_ctx,
   get_pubkey,
-  get_session_ctx,
   get_share,
   refresh_share,
   sign_msg,
@@ -28,9 +28,9 @@ const share_ct = 3
 const thold    = 2
 
 // Generate a secret, package of shares, and group key.
-const group = create_key_group(thold, share_ct, secrets)
+const group = create_dealer_set(thold, share_ct, secrets)
 
-console.log('group pk:', group.pubkey)
+console.log('group pk:', group.group_pk)
 
 // Distribute the shares.
 const share_1 = get_share(group.shares, 1)
@@ -58,7 +58,7 @@ const new_shares  = [ new_share_1, new_share_2, new_share_3 ]
 const commits = new_shares.map(e => create_commit_pkg(e))
 
 // Compute the context data for the signing session.
-const ctx = get_session_ctx(group.pubkey, commits, message)
+const ctx = get_group_signing_ctx(group.group_pk, commits, message)
 
 // Convert the share indices into iterable numbers.
 const idx = ctx.indexes.map(i => Number(i) - 1)

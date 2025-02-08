@@ -16,7 +16,7 @@ export default async function (
     const group = frost_keygen()
 
     try {
-      const pubkey = group.pubkey.slice(2)
+      const pubkey = group.group_pk.slice(2)
       // Specify a basic script to use for testing.
       const script = [ pubkey, 'OP_CHECKSIG' ]
       const sbytes = Script.encode(script)

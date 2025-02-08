@@ -9,7 +9,7 @@ import {
   evaluate_x
 } from './poly.js'
 
-import type { SecretShare, ShareSet } from '@/types/index.js'
+import type { SecretShare } from '@/types/index.js'
 
 /**
  * Creates a list of secret shares for a given polynomial.
@@ -108,17 +108,17 @@ export function verify_share (
 }
 
 
-export function create_share_set (
-  shares : SecretShare[],
-  index  : number
-) : ShareSet {
-  return { idx : index, shares }
-}
+// export function create_share_set (
+//   shares : SecretShare[],
+//   index  : number
+// ) : SecretShareSet {
+//   return { idx : index, shares }
+// }
 
 /**
  * Interpolate secret shares and derive the root secret.
  */
-export function derive_secret (
+export function derive_shares_secret (
   shares : SecretShare[]
 ) : string {
   // Convert each share into coordinates.

@@ -5,9 +5,9 @@ import { random_bytes } from '@cmdcode/frost/util'
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_key_group,
+  create_dealer_set,
   get_commit_pkg,
-  get_session_ctx,
+  get_group_signing_ctx,
   sign_msg,
   verify_final_sig,
   verify_partial_sig
@@ -29,7 +29,7 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
 
       try {
         // Generate a secret, package of shares, and group key.
-        const group = create_key_group(thold, share_ct, secrets)
+        const group = create_dealer_set(thold, share_ct, secrets)
 
         // This part is really slow.
 
@@ -45,7 +45,7 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
         const commits = shares.map(e => create_commit_pkg(e, seed_h, seed_b))
 
         // Compute some context data for the signing session.
-        const ctx = get_session_ctx(group.pubkey, commits, message)
+        const ctx = get_group_signing_ctx(group.group_pk, commits, message)
         const idx = ctx.indexes.map(i => Number(i) - 1)
 
         // Create the partial signatures for a given signing context.

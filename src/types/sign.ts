@@ -1,9 +1,9 @@
-import { CommitPackage } from './commit.js'
+import { CommitmentPackage } from './commit.js'
 import { SecretShare }   from './share.js'
 
-export interface Membership {
+export interface ShareProfile {
   idx    : number
-  commit : CommitPackage
+  commit : CommitmentPackage
   share  : SecretShare
 }
 

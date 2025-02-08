@@ -2,7 +2,7 @@ import { PointState } from './ecc.js'
 
 import { BindFactor, PublicNonce } from './commit.js'
 
-export type GroupSessionCtx = GroupKeyContext & GroupCommitContext
+export type GroupSigningCtx = GroupKeyContext & GroupCommitContext
 
 export interface GroupKeyContext {
   group_pt : PointState

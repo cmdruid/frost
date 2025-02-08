@@ -3,7 +3,7 @@ import { SpecVector } from '../types.js'
 
 import {
   get_pubkey,
-  get_session_ctx,
+  get_group_signing_ctx,
   sign_msg,
   verify_partial_sig
 } from '@cmdcode/frost/lib'
@@ -17,7 +17,7 @@ export default function (tape : Test, vector : SpecVector) {
       return { idx, binder_pn: pnonce_b, hidden_pn : pnonce_h }
     })
 
-    const context = get_session_ctx(grp_pubkey, pnonces, message)
+    const context = get_group_signing_ctx(grp_pubkey, pnonces, message)
 
     for (const mbr of vector.members) {
       const { idx, seckey, snonce_h, snonce_b, pnonce_h, pnonce_b } = mbr

@@ -1,4 +1,4 @@
-export type SharePackage = ShareGroup & { idx : number }
+export type SecretSharePackage = SecretShareSet & { idx : number }
 
 export interface SecretShare {
   idx    : number
@@ -10,18 +10,11 @@ export interface PublicShare {
   pubkey : string
 }
 
-export interface ShareSet {
-  idx    : number
-  shares : SecretShare[]
+export interface SecretShareSet {
+  shares      : SecretShare[]
+  vss_commits : string[]
 }
 
-export interface ShareGroup {
-  commits : string[]
-  shares  : SecretShare[]
-}
-
-export interface KeyGroup extends ShareGroup {
-  commits : string[]
-  pubkey  : string
-  shares  : SecretShare[]
+export interface DealerShareSet extends SecretShareSet {
+  group_pk : string
 }

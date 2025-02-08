@@ -6,34 +6,34 @@ import {
 } from './shares.js'
 
 import {
-  create_coeffs,
-  get_coeff_commits
+  create_share_coeffs,
+  get_share_commits
 } from './vss.js'
 
-import type { ShareGroup, KeyGroup } from '@/types/index.js'
+import type { SecretShareSet, DealerShareSet } from '@/types/index.js'
 
-export function create_share_group (
+export function create_share_set (
   threshold : number,
   share_max : number,
   secrets   : Bytes[] = []
-) : ShareGroup {
+) : SecretShareSet {
   // Create the coefficients for the polynomial.
-  const coeffs  = create_coeffs(secrets, threshold)
+  const coeffs      = create_share_coeffs(secrets, threshold)
   // Create the secret shares for each member.
-  const shares  = create_shares(coeffs, share_max)
+  const shares      = create_shares(coeffs, share_max)
   // Create the commitments for each share.
-  const commits = get_coeff_commits(coeffs)
+  const vss_commits = get_share_commits(coeffs)
   // Return the share package object.
-  return { commits, shares }
+  return { shares, vss_commits }
 }
 
-export function create_key_group (
+export function create_dealer_set (
   threshold : number,
   share_max : number,
   secrets   : Bytes[] = []
-) : KeyGroup {
-  const share_set = create_share_group(threshold, share_max, secrets) 
-  const pubkey    = share_set.commits[0]
+) : DealerShareSet {
+  const share_set = create_share_set(threshold, share_max, secrets) 
+  const group_pk  = share_set.vss_commits[0]
   // Return the share package object.
-  return { ...share_set, pubkey }
+  return { ...share_set, group_pk }
 }

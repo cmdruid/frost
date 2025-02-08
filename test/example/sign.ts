@@ -3,9 +3,9 @@ import { random_bytes } from '@cmdcode/frost/util'
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_key_group,
+  create_dealer_set,
   get_commit_pkg,
-  get_session_ctx,
+  get_group_signing_ctx,
   sign_msg,
   verify_final_sig,
   verify_partial_sig
@@ -19,14 +19,14 @@ const threshold = 2
 const share_max = 3
 
 // Generate a group of secret shares.
-const group = create_key_group(threshold, share_max, secrets)
+const group = create_dealer_set(threshold, share_max, secrets)
 
 // Select a threshold (t) amount of shares and create nonce commitments.
 const shares  = group.shares.slice(0, threshold)
 const commits = shares.map(e => create_commit_pkg(e))
 
 // Compute the context data for the signing session.
-const ctx = get_session_ctx(group.pubkey, commits, message)
+const ctx = get_group_signing_ctx(group.group_pk, commits, message)
 
 // Convert the share indices into iterable numbers.
 const idx = ctx.indexes.map(i => Number(i) - 1)

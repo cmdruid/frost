@@ -15,7 +15,7 @@ import { mod_n, lift_x } from '@/ecc/util.js'
  * @param threshold : The number of coefficients to generate.
  * @returns         : A list of bigints.
  */
-export function create_coeffs (
+export function create_share_coeffs (
   secrets   : Bytes[],
   threshold : number,
 ) {
@@ -33,11 +33,11 @@ export function create_coeffs (
 /**
  * Create a list of public key commitments, one for each coefficient.
  */
-export function get_coeff_commits (
-  coeffs : Bytes[]
+export function get_share_commits (
+  share_coeffs : Bytes[]
 ) : string[] {
   // For each coefficient in the list:
-  return coeffs.map(e => {
+  return share_coeffs.map(e => {
     // Convert to a scalar value.
     const scalar = Buff.bytes(e).big
     // Return the generator point value, in hex.
@@ -48,7 +48,7 @@ export function get_coeff_commits (
 /**
  * Create a list of public key commitments, one for each coefficient.
  */
-export function merge_coeff_commits (
+export function merge_share_commits (
   commits_a : string[],
   commits_b : string[]
 ) : string[] {

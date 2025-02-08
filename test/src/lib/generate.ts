@@ -5,9 +5,9 @@ import { get_record, random_bytes } from '@cmdcode/frost/util'
 import {
   combine_partial_sigs,
   create_commit_pkg,
-  create_key_group,
+  create_dealer_set,
   get_commit_pkg,
-  get_session_ctx,
+  get_group_signing_ctx,
   sign_msg,
   verify_final_sig,
   verify_share
@@ -21,11 +21,11 @@ const nseed_h = secrets[0].hex
 const nseed_b = secrets[1].hex
 
 // Generate a group of shares that represent a public key.
-const group = create_key_group(thold, share_ct, secrets)
+const group = create_dealer_set(thold, share_ct, secrets)
 
 // Verify that all shares are included in the group key.
 const is_valid_shares = group.shares.every(e => {
-  if (!verify_share(group.commits, e, thold)) {
+  if (!verify_share(group.vss_commits, e, thold)) {
     throw new Error('invalid share in the group at index: ' + e.idx)
   }
 })
@@ -36,7 +36,7 @@ if (!is_valid_shares) throw new Error('shares failed validation')
 const shares  = group.shares.slice(0, thold)
 const commits = shares.map(e => create_commit_pkg(e, nseed_h, nseed_b))
 // Compute some context data for the signing session.
-const ctx = get_session_ctx(group.pubkey, commits, message)
+const ctx = get_group_signing_ctx(group.group_pk, commits, message)
 const idx = ctx.indexes.map(i => Number(i) - 1)
 // Create the partial signatures for a given signing context.
 const psigs = idx.map(i => {
@@ -54,7 +54,7 @@ console.log(JSON.stringify({
     "share_max"    : 3,
     "indexes"      : ctx.indexes.map(e => Number(e)),
     "challenge"    : Buff.big(ctx.challenge, 32).hex,
-    "commits"      : group.commits,
+    "commits"      : group.vss_commits,
     "message"      : Buff.bytes(message).hex,
     "grp_pnonce"   : ctx.group_pn,
     "grp_pubkey"   : ctx.group_pk,

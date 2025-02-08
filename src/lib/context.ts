@@ -5,23 +5,23 @@ import { lift_x }          from '@/ecc/util.js'
 import { get_challenge }   from '@/lib/helpers.js'
 
 import {
-  get_commit_binders,
-  get_commit_prefix,
-  get_group_nonce,
+  get_group_binders,
+  get_group_prefix,
+  get_group_pubnonce,
   get_nonce_ids
 } from './commit.js'
 
 import type {
   GroupCommitContext,
   GroupKeyContext,
-  GroupSessionCtx,
+  GroupSigningCtx,
   PublicNonce
 } from '@/types/index.js'
 
 /**
  * Get the initial context of the group key, plus any tweaks.
  */
-export function get_key_context (
+export function get_group_key_context (
   pubkey  : Bytes,
   tweaks? : Bytes[]
 ) : GroupKeyContext {
@@ -40,7 +40,7 @@ export function get_key_context (
 /**
  * Get the remaining context of the signing session.
  */
-export function get_commit_context (
+export function get_group_commit_context (
   key_ctx : GroupKeyContext,
   pnonces : PublicNonce[],
   message : string,
@@ -48,11 +48,11 @@ export function get_commit_context (
   // Set the group pubkey from the key context.
   const group_pubkey = key_ctx.group_pk
   // Calculate the prefix for making the binding commitments.
-  const bind_prefix  = get_commit_prefix(pnonces, group_pubkey, message).hex
+  const bind_prefix  = get_group_prefix(pnonces, group_pubkey, message).hex
   // Compute the binding values for each nonce.
-  const bind_factors = get_commit_binders(pnonces, bind_prefix)
+  const bind_factors = get_group_binders(pnonces, bind_prefix)
   // Compute the group nonce value.
-  const group_pn     = get_group_nonce(pnonces, bind_factors)
+  const group_pn     = get_group_pubnonce(pnonces, bind_factors)
   // Compile a list of identifiers from the nonces.
   const indexes      = get_nonce_ids(pnonces)
   // Compute the challenge hash for the signing session.
@@ -66,16 +66,16 @@ export function get_commit_context (
 /**
  * Get the full context of the signing session.
  */
-export function get_session_ctx (
+export function get_group_signing_ctx (
   group_pk : Bytes,
   pnonces  : PublicNonce[],
   message  : string,
   tweaks?  : string[]
-) : GroupSessionCtx {
+) : GroupSigningCtx {
   // Get the key context for the session.
-  const key_ctx = get_key_context(group_pk, tweaks)
+  const key_ctx = get_group_key_context(group_pk, tweaks)
   // Get the remaining context for the session.
-  const com_ctx = get_commit_context(key_ctx, pnonces, message)
+  const com_ctx = get_group_commit_context(key_ctx, pnonces, message)
   // Return the full context object.
   return { ...key_ctx, ...com_ctx }
 }

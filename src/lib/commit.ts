@@ -10,7 +10,7 @@ import {
 
 import type {
   CurveElement,
-  CommitPackage,
+  CommitmentPackage,
   SecretShare,
   PublicNonce,
   BindFactor
@@ -25,21 +25,22 @@ export function get_nonce_ids (
 /**
  * Constructs a byte-prefix for the signing session.
  */
-export function get_commit_prefix (
+export function get_group_prefix (
   pnonces  : PublicNonce[],
   group_pk : string,
   message  : string
 ) : Buff {
   const msg_bytes   = Buff.hex(message)
   const msg_hash    = H.H4(msg_bytes)
-  const commit_list = get_group_commit(pnonces)
+  const commit_list = get_group_commitment(pnonces)
   const commit_hash = H.H5(commit_list)
   return Buff.join([ group_pk, msg_hash, commit_hash ])
 }
 
-export function get_group_commit (
+export function get_group_commitment (
   pnonces : PublicNonce[]
 ) {
+  // TODO: commits need to be sorted by idx.
   let enc_group_commit : Bytes[] = []
   for (const { idx, hidden_pn, binder_pn } of pnonces) {
     const enc_commit = [ G.SerializeScalar(idx), hidden_pn, binder_pn ]
@@ -63,7 +64,7 @@ export function get_bind_factor (
 /**
  * Computes the binding values for each public nonce.
  */
-export function get_commit_binders (
+export function get_group_binders (
   nonces : PublicNonce[],
   prefix : Bytes
 ) : BindFactor[] {
@@ -77,7 +78,7 @@ export function get_commit_binders (
 /**
  * Computes the group public nonce for the signing session.
  */
-export function get_group_nonce (
+export function get_group_pubnonce (
   pnonces : PublicNonce[],
   binders : BindFactor[]
 ) : string {
@@ -102,7 +103,7 @@ export function create_commit_pkg (
   secret_share : SecretShare,
   hidden_seed ?: string,
   binder_seed ?: string
-) : CommitPackage {
+) : CommitmentPackage {
   const { idx, seckey } = secret_share
   const binder_sn = generate_nonce(seckey, binder_seed).hex
   const hidden_sn = generate_nonce(seckey, hidden_seed).hex
@@ -112,9 +113,9 @@ export function create_commit_pkg (
 }
 
 export function get_commit_pkg (
-  commits : CommitPackage[],
+  commits : CommitmentPackage[],
   share   : SecretShare
-) : CommitPackage {
+) : CommitmentPackage {
   const idx    = share.idx
   return get_record(commits, idx)
 }

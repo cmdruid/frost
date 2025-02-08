@@ -47,6 +47,10 @@ export function get_pubkey (secret : Bytes) {
 }
 
 export function tweak_pubkey (
+
+
+
+  
   pubkey : Bytes,
   tweak  : Bytes
 ) {

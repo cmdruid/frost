@@ -6,11 +6,11 @@ import { _0n }    from '@/const.js'
 import { calc_lagrange_coeff } from './poly.js'
 
 import {
-  create_coeffs,
-  get_coeff_commits
+  create_share_coeffs,
+  get_share_commits
 } from './vss.js'
 
-import type { SecretShare, SharePackage }  from '@/types/index.js'
+import type { SecretShare, SecretSharePackage }  from '@/types/index.js'
 
 export function gen_recovery_shares (
   members   : number[],
@@ -18,7 +18,7 @@ export function gen_recovery_shares (
   target    : number,
   threshold : number,
   secrets   : string[] = []
-) : SharePackage {
+) : SecretSharePackage {
   assert.ok(members.length >= threshold, 'not enough members to meet threshold')
   // 
   members = members.sort()
@@ -37,7 +37,7 @@ export function gen_recovery_shares (
   // Assert the lagrange coefficient is greater than zero.
   assert.ok(lgrng_coeff > _0n, 'lagrange coefficient must be greater than zero')
   // Generate a new set of random coefficients.
-  const rand_coeffs   = create_coeffs(secrets, threshold - 1)
+  const rand_coeffs   = create_share_coeffs(secrets, threshold - 1)
   // Sum the coefficients 
   const coeff_sum     = rand_coeffs.reduce((p, n) => mod_n(p + n), _0n)
   // Compute the final repair coefficient.
@@ -45,13 +45,13 @@ export function gen_recovery_shares (
   // Collect the coeffs together as repair shares.
   const repair_shares = [ ...rand_coeffs, repair_coeff ]
   // Get commitments for all repair shares.
-  const commits = get_coeff_commits(repair_shares)
+  const vss_commits   = get_share_commits(repair_shares)
   //
   const shares = members.map((idx, i) => {
     return { idx, seckey: Buff.big(repair_shares[i]).hex }
   })
   // Return repair package.
-  return { idx: share.idx, commits, shares }
+  return { idx: share.idx, vss_commits, shares }
 }
 
 /**

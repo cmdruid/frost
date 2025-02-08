@@ -1,7 +1,7 @@
 import { random_bytes } from '@cmdcode/frost/util'
 
 import {
-  create_key_group,
+  create_dealer_set,
   gen_recovery_shares,
   get_pubkey,
   get_share,
@@ -20,9 +20,9 @@ const share_ct = 3
 const thold    = 2
 
 // Generate a secret, package of shares, and group key.
-const group = create_key_group(thold, share_ct, secrets)
+const group = create_dealer_set(thold, share_ct, secrets)
 
-console.log('group pk:', group.pubkey)
+console.log('group pk:', group.group_pk)
 
 // Distribute the shares.
 const share_1 = get_share(group.shares, 1)
