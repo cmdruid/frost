@@ -22,6 +22,19 @@ export function get_nonce_ids (
   return pnonces.map(pn => BigInt(pn.idx))
 }
 
+export function get_commits_prefix (
+  pnonces : PublicNonce[]
+) {
+  // TODO: commits need to be sorted by idx.
+  let enc_group_commit : Bytes[] = []
+  const sorted_pnonces = pnonces.sort((a, b) => a.idx - b.idx)
+  for (const { idx, hidden_pn, binder_pn } of sorted_pnonces) {
+    const enc_commit = [ G.SerializeScalar(idx), hidden_pn, binder_pn ]
+    enc_group_commit = [ ...enc_group_commit, ...enc_commit ]
+  }
+  return Buff.join(enc_group_commit)
+}
+
 /**
  * Constructs a byte-prefix for the signing session.
  */
@@ -32,21 +45,9 @@ export function get_group_prefix (
 ) : Buff {
   const msg_bytes   = Buff.hex(message)
   const msg_hash    = H.H4(msg_bytes)
-  const commit_list = get_group_commitment(pnonces)
+  const commit_list = get_commits_prefix(pnonces)
   const commit_hash = H.H5(commit_list)
   return Buff.join([ group_pk, msg_hash, commit_hash ])
-}
-
-export function get_group_commitment (
-  pnonces : PublicNonce[]
-) {
-  // TODO: commits need to be sorted by idx.
-  let enc_group_commit : Bytes[] = []
-  for (const { idx, hidden_pn, binder_pn } of pnonces) {
-    const enc_commit = [ G.SerializeScalar(idx), hidden_pn, binder_pn ]
-    enc_group_commit = [ ...enc_group_commit, ...enc_commit ]
-  }
-  return Buff.join(enc_group_commit)
 }
 
 export function get_bind_factor (
