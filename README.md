@@ -8,7 +8,7 @@ The FROST protocol specifies two rounds for producing a threshold signature.
 
 **Initial setup of parameters (using a trusted dealer):**
 
-This repository use a trusted dealer method for demonstration purposes. Feel free to use your own DKG protocol for generating and distributing shares.
+This repository uses a trusted dealer method for demonstration purposes. Feel free to use your own [Distributed Key Generation](https://en.wikipedia.org/wiki/Distributed_key_generation) (DKG) protocol for generating and distributing shares.
 
 ```ts
 import { create_key_group } from '@cmdcode/frost/lib'
