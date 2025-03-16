@@ -19,6 +19,11 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
     const failures : number[] = []
 
     for (let i = 0; i < rounds; i++) {
+      const tweaks = [
+        random_bytes(32).hex,
+        random_bytes(32).hex,
+        random_bytes(32).hex,
+      ]
 
       const secrets  = [ random_bytes(32), random_bytes(32) ]
       const message  = random_bytes(32).hex
@@ -45,7 +50,7 @@ export default function (t : Test, rounds = 10, max_shares = 21) {
         const commits = shares.map(e => create_commit_pkg(e, seed_h, seed_b))
 
         // Compute some context data for the signing session.
-        const ctx = get_group_signing_ctx(group.group_pk, commits, message)
+        const ctx = get_group_signing_ctx(group.group_pk, commits, message, tweaks)
         const idx = ctx.indexes.map(i => Number(i) - 1)
 
         // Create the partial signatures for a given signing context.

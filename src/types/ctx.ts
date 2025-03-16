@@ -1,4 +1,4 @@
-import { PointState } from './ecc.js'
+import { CurveElement, PointState } from './ecc.js'
 
 import { BindFactor, PublicNonce } from './commit.js'
 
@@ -7,7 +7,7 @@ export type GroupSigningCtx = GroupKeyContext & GroupCommitContext
 export interface GroupKeyContext {
   group_pt : PointState
   group_pk : string
-  int_pt  ?: PointState
+  int_pt  ?: CurveElement
   int_pk  ?: string
   tweak   ?: string
 }
