@@ -1,5 +1,5 @@
 import { Buff, Bytes }     from '@cmdcode/buff'
-import { _1n }             from '@/const.js'
+import { _1n, _N }         from '@/const.js'
 import { get_point_state } from '@/ecc/state.js'
 import { lift_x }          from '@/ecc/util.js'
 import { get_challenge }   from '@/lib/helpers.js'
@@ -28,9 +28,9 @@ export function get_group_key_context (
   // Initialize internal pubkey as group pubkey.
   const int_pk   = Buff.bytes(pubkey).hex
   // Get initial state of pubkey as internal state.
-  const int_pt   = get_point_state(lift_x(pubkey))
+  const int_pt   = lift_x(int_pk)
   // Calculate the group state (with any additional tweaks).
-  const group_pt = get_point_state(int_pt.point, tweaks)
+  const group_pt = get_point_state(int_pt, tweaks)
   // Set the group pubkey based on the group point (after tweaks).
   const group_pk = group_pt.point.toHex(true)
   // Return both keys and states.

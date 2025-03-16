@@ -44,9 +44,9 @@
   "scripts": {
     "build": "./script/build.sh",
     "load": "tsx --tsconfig ./test/tsconfig.json",
-    "release": "npm test && npm run build",
+    "release": "npm test | faucet&& npm run build",
     "scratch": "npm run load test/scratch.ts",
-    "test": "npm run load test/tape.ts | faucet"
+    "test": "npm run load test/tape.ts"
   },
   "devDependencies": {
     "@cmdcode/core-cmd": "^1.6.5",

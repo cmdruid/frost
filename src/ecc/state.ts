@@ -1,7 +1,7 @@
-import { Buff, Bytes } from '@cmdcode/buff'
-import { _N }          from '@/const.js'
-import { mod_n }       from './util.js'
-import * as G          from './group.js'
+import { Buff, Bytes }  from '@cmdcode/buff'
+import { _0n, _1n, _N } from '@/const.js'
+import { mod_n }        from './util.js'
+import * as G           from './group.js'
 
 import type {
   CurveElement,
@@ -17,32 +17,35 @@ export function get_point_state (
   element : CurveElement,
   tweaks  : Bytes[] = []
 ) : PointState {
-  // Convert our tweaks to bigints.
-  const ints = tweaks.map(e => mod_n(Buff.bytes(e).big))
-  // Define the positive scalar.
-  const pos  = BigInt(1)
-  // Define the negative (inverse) scalar.
+  const ints = tweaks.map(e => Buff.bytes(e).big)
+  const pos  = _1n
   const neg  = _N - pos
 
+  // Define our working variables.
   let point : CurveElement = element,
       parity = pos, // Handles negation for current round.
-      state  = pos, // Tracks negation state across rounds.
-      tweak  = 0n   // Stores the accumulated (negated) tweak.
+      state  = pos, // Stores the accumulated (negated) tweak.
+      tweak  = _0n  // Stores the accumulated (negated) tweak.
 
+  // Iterate through the tweaks:
   for (const t of ints) {
-    // If point is odd, g should be negative.
-    parity = (!point.hasEvenY()) ? neg : pos
-    // Invert point based on g, then add tweak.
-    point  = G.ElementAdd(G.ScalarMulti(point, parity), G.ScalarBaseMulti(t))
-    // Assert that point is not null.
+    // Convert the tweak bigint into a point on the curve.
+    const tG = G.ScalarBaseMulti(t)
+    // Set the parity value based on the point's y-coordinate.
+    parity = point.hasEvenY() ? pos : neg
+    // Negate the point if the parity is odd.
+    point = (parity === neg) ? point.negate() : point
+    // Add the tweak point to the current point.
+    point = G.ElementAdd(point, tG)
+    // Assert that point is valid.
     point.assertValidity()
-    // Store our progress for the next round.
+    // Update the parity state with the current value.
     state = mod_n(parity * state)
-    tweak = mod_n(t + parity * tweak)
+    // Update the tweak state with the current value.
+    tweak = mod_n(t + (parity * tweak))
   }
-  
-  // Set parity to the current point state.
-  parity = (!point.hasEvenY()) ? neg : pos
 
-  return { point, parity, state, tweak }
+  parity = point.hasEvenY() ? pos : neg
+
+  return { parity, point, state, tweak }
 }

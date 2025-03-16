@@ -1,4 +1,4 @@
-import { CoreConfig, CoreDaemon } from '@cmdcode/core-cmd'
+import { CoreClient } from '@cmdcode/core-cmd'
 import { Test }       from 'tape'
 
 import { frost_keygen, frost_sign } from '../lib/signer.js'
@@ -7,12 +7,10 @@ import { Address, Script, Signer, Tap, Tx } from '@cmdcode/tapscript'
 
 export default async function (
   t      : Test,
-  config : Partial<CoreConfig>
+  client : CoreClient,
 ) {
-  const core = new CoreDaemon(config)
-  const client = await core.startup()
 
-  t.test('Testing transaction signing', async t => {
+  t.test('Testing taproot script spending', async t => {
     const group = frost_keygen()
 
     try {
@@ -26,7 +24,7 @@ export default async function (
       // (cblock) that targets our leaf and proves its inclusion in the tapkey.
       const [ tapkey, cblock ] = Tap.getPubKey(pubkey, { target: tapleaf })
       // Create a wallet to use as a faucet.
-      const { faucet } = await client.load_wallets('faucet')
+      const faucet = await client.load_wallet('faucet')
       // Ensure the wallet has funds to spend.
       await faucet.ensure_funds(1_000_000)
       // Generate a return address from the faucet.
@@ -66,8 +64,6 @@ export default async function (
     } catch (err) {
       console.log(err)
       t.fail('failed to create transaction')
-    } finally {
-      t.teardown(() => { core.shutdown() })
     }
   })
 }

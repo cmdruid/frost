@@ -1,5 +1,5 @@
 import tape           from 'tape'
-import { CoreConfig } from '@cmdcode/core-cmd'
+import { CoreConfig, CoreDaemon } from '@cmdcode/core-cmd'
 
 import shares_test  from './src/unit/shares.test.js'
 import commit_test  from './src/unit/commit.test.js'
@@ -8,7 +8,9 @@ import dkg_test     from './src/unit/dkg.test.js'
 import signer_test  from './src/unit/sign.test.js'
 import combine_test from './src/unit/aggregate.test.js'
 import stress_test  from './src/e2e/stress.test.js'
-import tx_test      from './src/e2e/tx.test.js'
+import spend_test   from './src/e2e/spend.test.js'
+import script_test  from './src/e2e/script.test.js'
+import tweak_test   from './src/e2e/tweak.test.js'
 
 import vector from './src/vectors/spec.json' assert { type : 'json' }
 
@@ -33,8 +35,15 @@ tape('Frost Test Suite', async t => {
   context_test(t, vector)
   signer_test(t,  vector)
   combine_test(t, vector)
+  tweak_test(t)
   
-  await tx_test(t, config)
-
   stress_test(t, 10, 100)
+
+  const core   = new CoreDaemon(config)
+  const client = await core.startup()
+
+  await spend_test(t, client)
+  await script_test(t, client)
+
+  t.teardown(() => { core.shutdown() })
 })

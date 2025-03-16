@@ -47,14 +47,10 @@ export function get_pubkey (secret : Bytes) {
 }
 
 export function tweak_pubkey (
-
-
-
-  
   pubkey : Bytes,
   tweak  : Bytes
 ) {
-  const coeff = Buff.bytes(tweak).big 
+  const coeff = Buff.bytes(tweak).big
   let   point = lift_x(pubkey)
         point = point.multiply(coeff)
   return G.SerializeElement(point).hex
@@ -68,10 +64,28 @@ export function get_challenge (
   pubkey  : Bytes,
   message : Bytes
 ) {
-  const grp_pk = Buff.bytes(pubkey).slice(1)
-  const grp_pn = Buff.bytes(pnonce).slice(1)
+  const grp_pk = convert_pubkey(pubkey, 'bip340')
+  const grp_pn = convert_pubkey(pnonce, 'bip340')
   assert.size(grp_pk, 32)
   assert.size(grp_pn, 32)
   const digest = hash340('BIP0340/challenge', grp_pn, grp_pk, message)
   return digest.big
+}
+
+export function convert_pubkey (
+  pubkey : Bytes,
+  type   : 'ecdsa' | 'bip340'
+) : string {
+  const pub = Buff.bytes(pubkey)
+  if (type === 'ecdsa') {
+    return pub.length === 32
+      ? pub.prepend(2).hex
+      : pub.hex
+  } else if (type === 'bip340') {
+    return (pub.length === 33)
+      ? pub.slice(1).hex
+      : pub.hex
+  } else {
+    throw new Error('invalid pubkey type')
+  }
 }
