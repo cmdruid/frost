@@ -8,7 +8,7 @@
 
 import { Buff, Bytes }          from '@vbyte/buff'
 import { G }                    from '@/ecc/index.js'
-import { _0n, _1n }             from '@/const.js'
+import { _0n }                  from '@/const.js'
 import { assert, get_record }   from '@/util/index.js'
 import { mod_n, pow_n, lift_x } from '@/ecc/util.js'
 
@@ -87,7 +87,7 @@ export function combine_shares (
 ) : string {
   const secret = shares
     .map(e => Buff.bytes(e.seckey).big)
-    .reduce((acc, cur) => mod_n(acc += cur), _0n)
+    .reduce((acc, cur) => mod_n(acc + cur), _0n)
   return Buff.big(secret, 32).hex
 }
 

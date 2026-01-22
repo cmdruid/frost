@@ -7,7 +7,6 @@
  */
 
 import { Buff, Bytes }     from '@vbyte/buff'
-import { _1n, _N }         from '@/const.js'
 import { get_point_state } from '@/ecc/state.js'
 import { lift_x }          from '@/ecc/util.js'
 import { get_challenge }   from '@/lib/helpers.js'

@@ -8,7 +8,6 @@
 import { Buff, Bytes }     from '@vbyte/buff'
 import { G, H }            from '@/ecc/index.js'
 import { lift_x, mod_n }   from '@/ecc/util.js'
-import { _0n, _1n }        from '@/const.js'
 import { assert, hash340 } from '@/util/index.js'
 
 /** BIP340 tagged hash domain for Schnorr signature challenges */

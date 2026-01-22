@@ -39,7 +39,7 @@ export function is_unique_set <T> (array : T[]) {
   const seen = new Set<T>()
   for (const x of array) {
     if (seen.has(x)) {
-      throw new Error('item in set is not unique: ' + String(x))
+      throw new Error(`item in set is not unique: ${String(x)}`)
     }
     seen.add(x)
   }

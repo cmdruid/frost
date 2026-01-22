@@ -11,7 +11,7 @@ export function get_record <T extends { idx : number }> (
 ) {
   const record = records.find(e => e.idx === idx)
   if (record === undefined) {
-    throw new Error('record not found for index: ' + idx)
+    throw new Error(`record not found for index: ${idx}`)
   }
   return record
 }

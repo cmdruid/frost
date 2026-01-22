@@ -8,7 +8,6 @@
 
 import { Buff, Bytes }   from '@vbyte/buff'
 import { G }             from '@/ecc/index.js'
-import { _0n, _1n }      from '@/const.js'
 import { assert }        from '@/util/index.js'
 import { mod_n, lift_x } from '@/ecc/util.js'
 

@@ -1,0 +1,66 @@
+name: Publish a new release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Parse git tag and determine version
+      - name: Parse tag and set version
+        id: get_version
+        run: |
+          TAG_NAME=${GITHUB_REF#refs/tags/v}
+          if [[ "$TAG_NAME" == *"-dev"* ]]; then
+            echo "VERSION=${TAG_NAME}" >> $GITHUB_ENV
+            echo "IS_DEV=true" >> $GITHUB_ENV
+          else
+            echo "VERSION=${TAG_NAME}" >> $GITHUB_ENV
+            echo "IS_DEV=false" >> $GITHUB_ENV
+          fi
+
+      # Extract changelog entry for the version
+      - name: Extract changelog
+        id: changelog
+        run: |
+          # Always look for base version in changelog (strip -dev suffix if present)
+          if [[ "${{ env.VERSION }}" == *"-dev"* ]]; then
+            BASE_VERSION=$(echo "${{ env.VERSION }}" | sed 's/-dev.*//')
+          else
+            BASE_VERSION=${{ env.VERSION }}
+          fi
+          # Use awk with string comparison to avoid regex escaping issues
+          CHANGELOG=$(awk -v version="$BASE_VERSION" '
+            BEGIN { target = "## [" version "]" }
+            $0 == target { found = 1; next }
+            found && substr($0, 1, 4) == "## [" { exit }
+            found && NF > 0 { print }
+          ' CHANGELOG.md)
+          if [ -z "$CHANGELOG" ]; then
+            echo "No changelog entry found for version $BASE_VERSION"
+            exit 1
+          fi
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      # Create GitHub release
+      - name: Create Release
+        run: |
+          if [ "${{ env.IS_DEV }}" = "true" ]; then
+            gh release create "v${{ env.VERSION }}" --title "Release v${{ env.VERSION }}" --notes "${{ env.CHANGELOG }}" --prerelease
+          else
+            gh release create "v${{ env.VERSION }}" --title "Release v${{ env.VERSION }}" --notes "${{ env.CHANGELOG }}"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

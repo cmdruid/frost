@@ -7,7 +7,7 @@
  */
 
 import { Bytes }    from '@vbyte/buff'
-import { _0n, _1n } from '@/const.js'
+import { _0n } from '@/const.js'
 
 import {
   combine_set,

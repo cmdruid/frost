@@ -83,7 +83,7 @@ export function str_to_bytes (str : string) {
 export function lift_x (pubkey : Bytes) {
   let bytes = Buff.bytes(pubkey)
   if (bytes.length < 32 || bytes.length > 33) {
-    throw new Error('invalid pubkey length: expected 32 or 33 bytes, got ' + bytes.length)
+    throw new Error(`invalid pubkey length: expected 32 or 33 bytes, got ${bytes.length}`)
   } else if (bytes.length === 32) {
     bytes = bytes.prepend(2)
   }
