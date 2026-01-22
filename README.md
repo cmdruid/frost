@@ -1,4 +1,4 @@
-# FROST
+# frost
 
 Flexible round-optimized schnorr threshold signatures for Bitcoin.
 
