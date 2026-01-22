@@ -1,5 +1,6 @@
 import { Test }   from 'tape'
-import { Buff }   from '@cmdcode/buff'
+import { Buff }   from '@vbyte/buff'
+import { sha256 } from '@noble/hashes/sha2.js'
 import { assert } from '@cmdcode/frost/util'
 
 import {
@@ -19,7 +20,7 @@ export default function (tape : Test) {
     try {
       const pkgs = aliases.map(alias => {
         // Use hash of alias to create the root secret.
-        const secret = Buff.str(alias).digest
+        const secret = new Buff(sha256(Buff.str(alias)))
         // Create a share package for the user.
         const group = create_dealer_set(5, 7, [ secret ])
         // Verify each share is included in the polynomial.

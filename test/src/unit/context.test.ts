@@ -1,4 +1,4 @@
-import { Buff }       from '@cmdcode/buff'
+import { Buff }       from '@vbyte/buff'
 import { Test }       from 'tape'
 import { SpecVector } from '../types.js'
 import { get_record } from '@cmdcode/frost/util'

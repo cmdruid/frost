@@ -1,4 +1,4 @@
-import { Buff }   from '@cmdcode/buff'
+import { Buff }   from '@vbyte/buff'
 import { assert } from '@cmdcode/frost/util'
 
 import {

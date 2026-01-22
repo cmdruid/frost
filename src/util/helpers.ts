@@ -1,11 +1,8 @@
-import { Buff, Bytes } from '@cmdcode/buff'
+import { Buff, Bytes } from '@vbyte/buff'
+import { sha256 }      from '@noble/hashes/sha2.js'
 
 export function random_bytes (size = 32) {
   return Buff.random(size)
-}
-
-export function count_scalars (x_j : bigint, L : bigint[]) {
-  return L.filter(x => x === x_j).length
 }
 
 export function get_record <T extends { idx : number }> (
@@ -20,7 +17,7 @@ export function get_record <T extends { idx : number }> (
 }
 
 export function taghash (tag : string) : Buff {
-  const hash = Buff.str(tag).digest
+  const hash = new Buff(sha256(Buff.str(tag)))
   return Buff.join([ hash, hash ])
 }
 
@@ -30,5 +27,5 @@ export function hash340 (
 ) : Buff {
   const hash  = taghash(tag)
   const bytes = data.map(e => Buff.bytes(e))
-  return Buff.join([ hash, ...bytes ]).digest
+  return new Buff(sha256(Buff.join([ hash, ...bytes ])))
 }

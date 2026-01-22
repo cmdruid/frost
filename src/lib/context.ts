@@ -1,4 +1,12 @@
-import { Buff, Bytes }     from '@cmdcode/buff'
+/**
+ * @fileoverview FROST Signing Context Management
+ *
+ * Provides functions to construct the signing context needed for FROST
+ * operations. The context encapsulates key state, commitment data, and
+ * challenge computation.
+ */
+
+import { Buff, Bytes }     from '@vbyte/buff'
 import { _1n, _N }         from '@/const.js'
 import { get_point_state } from '@/ecc/state.js'
 import { lift_x }          from '@/ecc/util.js'
@@ -19,7 +27,15 @@ import type {
 } from '@/types/index.js'
 
 /**
- * Get the initial context of the group key, plus any tweaks.
+ * Computes the group key context with optional Taproot-style tweaks.
+ *
+ * Creates the key context needed for signing, including the internal
+ * public key, tweaked group public key, and parity state for BIP340
+ * compatibility.
+ *
+ * @param pubkey - The internal group public key (pre-tweak)
+ * @param tweaks - Optional array of tweaks to apply (e.g., Taproot tweak)
+ * @returns The group key context with parity state
  */
 export function get_group_key_context (
   pubkey  : Bytes,
@@ -38,7 +54,15 @@ export function get_group_key_context (
 }
 
 /**
- * Get the remaining context of the signing session.
+ * Computes the commitment context for a signing session.
+ *
+ * Given the key context and participant commitments, computes all
+ * session-specific values: binding factors, group nonce, challenge, etc.
+ *
+ * @param key_ctx - The group key context
+ * @param pnonces - Array of public nonce commitments from participants
+ * @param message - The message to be signed (hex-encoded)
+ * @returns The commitment context containing all session binding data
  */
 export function get_group_commit_context (
   key_ctx : GroupKeyContext,
@@ -64,7 +88,17 @@ export function get_group_commit_context (
 }
 
 /**
- * Get the full context of the signing session.
+ * Computes the complete signing context for a FROST session.
+ *
+ * This is the main entry point for context creation. It combines the
+ * key context and commitment context into a single object that contains
+ * all information needed for signing operations.
+ *
+ * @param group_pk - The group public key (internal, pre-tweak)
+ * @param pnonces - Array of public nonce commitments from threshold participants
+ * @param message - The message to be signed (hex-encoded)
+ * @param tweaks - Optional array of key tweaks (e.g., for Taproot)
+ * @returns The complete signing context for use in sign_msg()
  */
 export function get_group_signing_ctx (
   group_pk : Bytes,

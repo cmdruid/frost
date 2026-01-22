@@ -1,17 +1,17 @@
-import { Buff, Bytes } from '@cmdcode/buff'
+import { Buff, Bytes } from '@vbyte/buff'
 
 export function ok (value : unknown, message ?: string) : asserts value {
-  if (value === false) throw new Error(message ?? 'Assertion failed!')
+  if (value === false) throw new Error(message ?? 'assertion failed')
 }
 
 export function exists <T> (
   input ?: T | null
 ) : asserts input is NonNullable<T> {
   if (typeof input === 'undefined') {
-    throw new TypeError('Input is undefined!')
+    throw new Error('input is undefined')
   }
   if (input === null) {
-    throw new TypeError('Input is null!')
+    throw new Error('input is null')
   }
 }
 
@@ -36,11 +36,12 @@ export function is_included <T> (
 }
 
 export function is_unique_set <T> (array : T[]) {
+  const seen = new Set<T>()
   for (const x of array) {
-    const c = array.filter(e => e === x).length
-    if (c !== 1) {
+    if (seen.has(x)) {
       throw new Error('item in set is not unique: ' + String(x))
     }
+    seen.add(x)
   }
 }
 
@@ -54,7 +55,7 @@ export function equal_arr_size <T> (
   array_a : T[],
   array_b : T[]
 ) {
-  if (array_a.length !== array_b. length) {
+  if (array_a.length !== array_b.length) {
     throw new Error(`array lengths are unequal: ${array_a.length} !== ${array_b.length}`)
   }
 }

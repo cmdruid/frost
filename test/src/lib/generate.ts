@@ -1,4 +1,4 @@
-import { Buff } from '@cmdcode/buff'
+import { Buff } from '@vbyte/buff'
 
 import { get_record, random_bytes } from '@cmdcode/frost/util'
 

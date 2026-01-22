@@ -38,7 +38,7 @@ export default {
     {
       file: 'dist/script.js',
       format: 'iife',
-      name: 'escrow_core',
+      name: 'frost',
       plugins: [terser()],
       sourcemap: true,
       globals : {
@@ -46,7 +46,6 @@ export default {
       }
     }
   ],
-  external : ['ws'],
   plugins: [ typescript(), nodeResolve(), commonjs(), json() ],
   strictDeprecations: true,
   treeshake

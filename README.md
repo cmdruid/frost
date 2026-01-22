@@ -11,20 +11,20 @@ The FROST protocol specifies two rounds for producing a threshold signature.
 This repository uses a trusted dealer method for demonstration purposes. Feel free to use your own [Distributed Key Generation](https://en.wikipedia.org/wiki/Distributed_key_generation) (DKG) protocol for generating and distributing shares.
 
 ```ts
-import { create_key_group } from '@cmdcode/frost/lib'
-import { random_bytes }     from '@cmdcode/frost/util'
+import { create_dealer_set } from '@cmdcode/frost/lib'
+import { random_bytes }      from '@cmdcode/frost/util'
 
 // Generate a random secret key and message.
 const seckey  = random_bytes(32).hex
 const message = random_bytes(32).hex
 
-// Configure the paramaters of the group.
-const secrets   = [ seckey ]
+// Configure the parameters of the group.
 const threshold = 2
 const share_max = 3
+const secrets   = [ seckey ]
 
 // Generate a group of secret shares.
-const group = create_key_group(secrets, threshold, share_max)
+const group = create_dealer_set(threshold, share_max, secrets)
 ```
 
 **Round 1 Example (nonce commitments):**
@@ -48,13 +48,13 @@ Once all participating member commitments have been collected, we can now produc
 ```ts
 import {
   get_commit_pkg,
-  get_session_context,
+  get_group_signing_ctx,
   sign_msg,
   verify_partial_sig
 } from '@cmdcode/frost/lib'
 
 // Compute the context data for the signing session.
-const ctx = get_session_ctx(group.pubkey, commits, message)
+const ctx = get_group_signing_ctx(group.group_pk, commits, message)
 
 // Convert the share indices into iterable numbers.
 const idx = ctx.indexes.map(i => Number(i) - 1)
